@@ -1,0 +1,16 @@
+{
+    "difficulty": "low",
+    "turn_number": 0,
+    "player_turn": "White",
+    "white_pieces_in_hand": 12,
+    "black_pieces_in_hand": 12,
+    "white_pieces_left": 12,
+    "black_pieces_left": 12,
+    "board_size": 24,
+    "lines": [
+	[{"xy":[], "owner": "black"},{"xy":[], "owner":"none"},{"xy":[], "owner":"none"}],
+	[{"xy":[], "owner": "none"},{"xy":[], "owner":"none"},{"xy": [], "owner": "none"}]
+    ]
+
+    
+}
