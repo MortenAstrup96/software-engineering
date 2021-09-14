@@ -10,7 +10,7 @@ Laurent VOURIOT
 """
 
 import json
-import os.path # exists
+import os.path  # exists
 
 from src.board import Board
 
@@ -63,4 +63,3 @@ if __name__ == "__main__":
         print(oserr)
 
     print(repr(r.board))
-
