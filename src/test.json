@@ -6,7 +6,7 @@
     "black_pieces_in_hand": 12,
     "white_pieces_left": 12,
     "black_pieces_left": 12,
-    "board_size": 24,
+    "board_size": 8,
     "lines": [
 	[{"xy":[], "owner": "black"},{"xy":[], "owner":"none"},{"xy":[], "owner":"none"}],
 	[{"xy":[], "owner": "none"},{"xy":[], "owner":"none"},{"xy": [], "owner": "none"}]
