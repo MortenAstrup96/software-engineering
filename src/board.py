@@ -23,7 +23,7 @@ class Board(object):
         """
         constructor
 
-        :param: difficulty (int) : 1 low, 2 medium, 3 high
+    :param: difficulty (int) : 1 low, 2 medium, 3 high
         :param: player_turn (bool) : True white, False black
         :param: white_pieces_in_hand (int)
         :param: black_pieces_in_hand (int)
@@ -41,6 +41,8 @@ class Board(object):
         self._black_pieces_left = black_pieces_left
         self._board_size = board_size
         self._lines = lines
+    def get_difficulty(self):
+        return self._difficulty
 
     def __repr__(self):
         """

@@ -12,7 +12,7 @@ Laurent VOURIOT
 import json
 import os.path  # exists
 
-from src.board import Board
+from board import Board
 
 
 class Reader(object):
