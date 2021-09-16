@@ -42,6 +42,7 @@ class Reader(object):
         self._board = Board(data["difficulty"], data["player_turn"], data["white_pieces_in_hand"],
                             data["black_pieces_in_hand"], data["white_pieces_left"], data["black_pieces_left"],
                             data["board_size"], data["lines"])
+        file.close()
 
     @property
     def board(self):

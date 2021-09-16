@@ -20,7 +20,7 @@ class Board(object):
     def __init__(self, difficulty, player_turn, white_pieces_in_hand,
                  black_pieces_in_hand, white_pieces_left, black_pieces_left,
                  board_size, lines):
-        """
+        """se
         constructor
 
     :param: difficulty (int) : 1 low, 2 medium, 3 high
@@ -44,6 +44,17 @@ class Board(object):
     def get_difficulty(self):
         return self._difficulty
 
+    def get_lines(self):
+        return self._lines
+    
+    def get_owner(self, position):
+        x,y = position
+        for line in self._lines:
+            position = next((item for item in line if item["xy"] == [x,y]), None) #Finds the position and its owner if it exists.
+            if position: return position['owner']
+        return "none"
+            
+    
     def __repr__(self):
         """
         :return: string to show all the attributes of the board for debug
