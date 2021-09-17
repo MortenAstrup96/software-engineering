@@ -10,16 +10,13 @@ class Engine(object):
 
     def __init__(self,board):
         self._board = board
-
-    def find_easy_move():
-        return
-
-    def find_medium_move():
-        return
-
-    def find_hard_move():
-        return
-
+    """
+    Arguments: (start_x, start_y), (end_x, end_y), player color
+    Returns: nothing
+    Moves a piece for player_color from the starting position to the end position.
+    Color should be either 'white' or 'black'
+    Example: move_piece((1,1),(1,2),"white") returns
+    """
     def move_piece(self, start, end, player_color):
         start_x, start_y = start
         end_x, end_y = end
@@ -45,25 +42,53 @@ class Engine(object):
             end["owner"] = player_color
         for start in list_of_starts:
             start['owner'] = "none"
+
+
+    """
+    Arguments: list of lists containing the lines for a board, player color
+    Returns: A list of lists of lists containing every possible placement of a piece as a seperate game state.
+
+    Finds all positions that are free and returns a list of the new states for each found position.
+    If no lines or player color is provided the function will use the current state of the board.
+
+    Example: all_possible_states_for_place([[{"xy":[1,1], "owner":"none"},{"xy":[1,2], "owner":"none"}]] retruns 
+    [
+     [ <- start state 1
+      [{'xy': [1, 1], 'owner': 'white'}, {'xy': [1, 2], 'owner': 'none'}] <- line on the board
+     ], <- end state 1
+     [ <- start state 2
+      [{'xy': [1, 1], 'owner': 'none'}, {'xy': [1, 2], 'owner': 'white'}] <- line on the board
+     ] <- end state 2
+    ]
+ 
+    """
+    def all_possible_states_for_place(self, lines = None, player_color = None):
+        if not lines: lines = self._board.get_lines()
+        if not player_color: player_color = self._board.get_player_turn()
+        free_positions = []
+        for line in lines:
+            free_positions += (item.copy() for item in line if item["owner"] == "none" and item not in free_positions)
+        all_states = []
+        for pos in free_positions:
+            new_lines = []
+            pos['owner'] = player_color
+            for line in lines:
+                new_lines.append([pos if (pos['xy'] == item['xy']) else item for item in line])
             
+            all_states.append(new_lines)
+        return all_states
 
-            # if end_position and end_position['owner'] != "none":
-            #     return -1
-            # elif end_position:
-            #     end_position['owner'] = player_color
-                
-            # if start_position and end_position and end_position['owner'] != "none":
-            #     start_position['owner'] = "none"
-                
-                
-        
+    """
+    Arguments: list of lists containing the lines for a board, player color
+    Returns: A list of lists of lists containing every possible move of a piece as a seperate game state.
     
-    
+    Finds all positions that can be moved to and returns a list of the new states for each found position.
+    """
+    def all_possible_states_for_move(self, lines= None, player_color = None):
+        if not lines: lines = self._board.get_lines()
+        if not player_color: player_color = self._board.get_player_turn()
 
-
-
-
-
+        pass
 
 
 def main():
@@ -73,7 +98,7 @@ def main():
         r.read(file_name)
         board = r.board
         e = Engine(board)
-        e.move_piece(1,1)
+        e.all_possible_states_for_place(board.get_lines())
     except OSError as oserr:
         print(oserr)
 if __name__ == "__main__":

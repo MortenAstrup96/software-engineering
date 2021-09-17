@@ -41,6 +41,10 @@ class Board(object):
         self._black_pieces_left = black_pieces_left
         self._board_size = board_size
         self._lines = lines
+
+    def get_player_turn(self):
+        return self._player_turn
+    
     def get_difficulty(self):
         return self._difficulty
 
