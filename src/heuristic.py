@@ -27,7 +27,7 @@ class Heuristic():
 
 
 #counts each point on the board where a piece can be played and counts them. Where the array is > 1 there are 2 possible lines.
-    def createVertexArray(board)
+    def createVertexArray(board):
         myarray[board.board_size][board.board_size]
         for line in board._lines:
             for item in line:
