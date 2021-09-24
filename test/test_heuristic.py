@@ -9,4 +9,4 @@ import heuristic as game_heuristics
 from game_engine import Engine
 
 
-class testHeuristic(unittest.TestCase):
+#class testHeuristic(unittest.TestCase):
