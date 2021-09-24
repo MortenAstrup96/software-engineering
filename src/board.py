@@ -50,7 +50,16 @@ class Board(object):
 
     def get_lines(self):
         return self._lines
-    
+
+    def get_board_size(self):
+        return self._board_size
+
+    def get_black_pieces_left(self):
+        return self._black_pieces_left
+
+    def get_white_pieces_left(self):
+        return self._white_pieces_left
+
     def get_owner(self, position):
         x,y = position
         for line in self._lines:
