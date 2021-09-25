@@ -170,6 +170,19 @@ class TestEngine(unittest.TestCase):
         engine = Engine(board)
         states = engine.all_possible_states_for_move()
         self.assertEqual(len(states),0)
+
+
+    def test_engine_all_possible_states_for_remove(self):
+        """
+        Test for finding all states for removing a piece.
+        Expected outcome: 2 states are be found.
+        """
+        board = game_board.Board("low","white",12,12,12,12,24,[
+        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"black"},{"xy":[1,3], "owner":"none"}],
+        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"white"},{"xy": [3,1], "owner": "none"}]]) 
+        engine = Engine(board)
+        states = engine.all_possible_states_for_remove()
+        self.assertEqual(len(states),2)
         
 if __name__ == '__main__':
     unittest.main()

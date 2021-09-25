@@ -118,12 +118,25 @@ class Engine(object):
                             ret_val = self.move_piece(tuple(item['xy']),tuple(before['xy']),player_color,copy.deepcopy(lines_local))
                             if ret_val == -1: return ret_val
                             all_states.append(ret_val)
-                            
-                        
         return all_states
-            
-            #(item for item in line if item['owner'] == player_color)
 
+    def all_possible_states_for_remove(self, lines = None, player_color = None):
+        if not lines: lines = self._board.get_lines()
+        if not player_color: player_color = self._board.get_player_turn()
+        lines_local = copy.deepcopy(lines)
+        all_positions = []
+        all_states = []
+        for line in lines_local:
+            for index, item in enumerate(line):
+                if(item['owner'] != player_color and item['owner'] != 'none' and item not in all_positions):
+                    all_positions.append(item.copy())
+        for pos in all_positions:
+            pos['owner'] = 'none'
+            new_lines = []
+            for line in lines:
+                new_lines.append([pos if (pos['xy'] == item['xy']) else item for item in line])
+            all_states.append(new_lines)
+        return all_states
 
 def main():
     r = Reader()
