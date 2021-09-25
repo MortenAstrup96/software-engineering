@@ -25,13 +25,12 @@ class Heuristic():
 
     #I originally planned to weight things with arrasy but decided it may not be needed. TBD
     def createVertexArray(board):
-      
-       # print(board)
+        # vertexArray = np.zeros(board.board_size,board.board_size)
+        #print(board)
         #vertexArray = [board.get_board_size(),board.get_board_size()]
         #myArray = [board.get_board_size(),board.get_board_size()]
         w, h = board.get_board_size(), board.get_board_size()
         myArray = [[0 for x in range(w)] for y in range(h)]
-
         for line in board._lines:
             for item in line:
                 x,y = item["xy"]
