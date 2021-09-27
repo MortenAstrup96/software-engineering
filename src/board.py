@@ -4,7 +4,9 @@ board.py
 Software-engineering project group B
 
 14/09/2021
-v0.1
+v0.2
+
+last_update : 27/09/21 
 
 Laurent VOURIOT
 
@@ -72,10 +74,10 @@ class Board(object):
         return self._white_pieces_left
 
     def get_white_pieces_in_hand(self): 
-        return self._white_pieces_left
+        return self._white_pieces_in_hand
 
     def get_black_pieces_in_hand(self): 
-        return self._black_pieces_left
+        return self._black_pieces_in_hand
 
 
     def get_owner(self, position):
@@ -84,9 +86,37 @@ class Board(object):
             position = next((item for item in line if item["xy"] == [x,y]), None) #Finds the position and its owner if it exists.
             if position: return position['owner']
         return "none"
+    
+    # SETTERS
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    def set_player_turn(self, player_turn):
+        self._player_turn = player_turn
+    
+    def set_difficulty(self, difficulty):
+        self._difficulty = difficulty
 
-            
+    def set_turn_number(self, turn_number):
+        self._turn_number = turn_number
+
+    def set_lines(self, lines):
+        self._lines = lines
+
+    def set_board_size(self, board_size):
+        self._board_size = board_size
+
+    def set_black_pieces_left(self, black_pieces_left):
+        self._black_pieces_left = black_pieces_left
+
+    def set_white_pieces_left(self, white_pieces_left):
+        self._white_pieces_left = white_pieces_left
+
+    def set_white_pieces_in_hand(self, white_pieces_in_hand): 
+        self._white_pieces_in_hand = white_pieces_in_hand
+
+    def set_black_pieces_in_hand(self, black_pieces_in_hand): 
+        self._black_pieces_in_hand = black_pieces_in_hand
+
     
     def __repr__(self):
         """
