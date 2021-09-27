@@ -4,7 +4,9 @@ reader.py
 Software-engineering project group B
 
 14/09/2021
-v0.1
+v0.2
+
+last update : 27/09/21 
 
 Laurent VOURIOT
 """
@@ -45,6 +47,29 @@ class Reader(object):
                             data["board_size"], data["lines"])
         file.close()
 
+    def write(self, file_name):
+        """
+        write a board into a json file
+        :param (string) file_name: file.json
+        """
+        board_data = { 
+                "difficulty": self._board.get_difficulty(),
+                "turn_number": self._board.get_turn_number(),
+                "player_turn": self._board.get_player_turn(),
+                "white_pieces_in_hand": self._board.get_white_pieces_in_hand(),
+                "black_pieces_in_hand": self._board.get_black_pieces_in_hand(),
+                "white_pieces_left": self._board.get_white_pieces_left(),
+                "black_pieces_left": self._board.get_black_pieces_left(),
+                "board_size": self._board.get_board_size(),
+                "lines":  self._board.get_lines()
+                }
+
+        # if file_name doesn't exists, the file is created
+        with open(file_name, "w") as json_file:
+            json_file.write(json.dumps(board_data))
+        json_file.close()
+    
+
     @property
     def board(self):
         """
@@ -63,5 +88,7 @@ if __name__ == "__main__":
         r.read(file_name)
     except OSError as oserr:
         print(oserr)
+
+
 
     print(repr(r.board))
