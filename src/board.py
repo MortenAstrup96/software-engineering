@@ -17,13 +17,15 @@ class Board(object):
 
     a board in a certain state of the game
     """
-    def __init__(self, difficulty, player_turn, white_pieces_in_hand,
+    def __init__(self, difficulty, turn_number, player_turn, white_pieces_in_hand,
                  black_pieces_in_hand, white_pieces_left, black_pieces_left,
                  board_size, lines):
         """se
         constructor
-
-    :param: difficulty (int) : 1 low, 2 medium, 3 high
+        
+        # TODO discuss about the representation of difficulty
+        :param: difficulty (int) : 1 low, 2 medium, 3 high
+        :param: turn_number (int) 
         :param: player_turn (bool) : True white, False black
         :param: white_pieces_in_hand (int)
         :param: black_pieces_in_hand (int)
@@ -34,6 +36,7 @@ class Board(object):
         """
 
         self._difficulty = difficulty
+        self._turn_number = turn_number
         self._player_turn = player_turn
         self._white_pieces_in_hand = white_pieces_in_hand
         self._black_pieces_in_hand = black_pieces_in_hand
@@ -42,11 +45,19 @@ class Board(object):
         self._board_size = board_size
         self._lines = lines
 
+
+
+# GETTERS
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     def get_player_turn(self):
         return self._player_turn
     
     def get_difficulty(self):
         return self._difficulty
+
+    def get_turn_number(self):
+        return self._turn_number
 
     def get_lines(self):
         return self._lines
@@ -60,12 +71,21 @@ class Board(object):
     def get_white_pieces_left(self):
         return self._white_pieces_left
 
+    def get_white_pieces_in_hand(self): 
+        return self._white_pieces_left
+
+    def get_black_pieces_in_hand(self): 
+        return self._black_pieces_left
+
+
     def get_owner(self, position):
         x,y = position
         for line in self._lines:
             position = next((item for item in line if item["xy"] == [x,y]), None) #Finds the position and its owner if it exists.
             if position: return position['owner']
         return "none"
+
+
             
     
     def __repr__(self):

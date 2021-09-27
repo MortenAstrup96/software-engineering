@@ -39,8 +39,9 @@ class Reader(object):
         # open the file then read the json data in order to create the object
         file = open(file_name, 'r')
         data = json.load(file)
-        self._board = Board(data["difficulty"], data["player_turn"], data["white_pieces_in_hand"],
-                            data["black_pieces_in_hand"], data["white_pieces_left"], data["black_pieces_left"],
+        self._board = Board(data["difficulty"], data["turn_number"], data["player_turn"], 
+                            data["white_pieces_in_hand"], data["black_pieces_in_hand"], 
+                            data["white_pieces_left"], data["black_pieces_left"],
                             data["board_size"], data["lines"])
         file.close()
 
