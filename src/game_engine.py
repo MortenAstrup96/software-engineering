@@ -138,6 +138,33 @@ class Engine(object):
             all_states.append(new_lines)
         return all_states
 
+#check the last state to the current state for the move and see if there is a new three in a row.
+#note: this is expecting the game state to only have the most recent move added.
+    def check_three_in_a_row(self, previousBoard, currentBoard, current_player_color):
+        for xIndex, line in enumerate(previousBoard._lines):
+            for yIndex, item in enumerate(line):
+                 if item['owner'] != currentBoard._lines[xIndex][yIndex]['owner']:                 
+                     return self.three_in_row(self, currentBoard, item['xy'], current_player_color)           
+        return 0
+ 
+        
+#this function checks for three in a row at a given poisition for a given player color
+#it should only be called through check_three_in)a_row to check the latest player move.
+    def three_in_row(self, board, position, current_player_color):        
+        for line in board._lines:
+            numinrow =0
+            hasPosition = 0
+            for item in line:
+                if ( current_player_color == item["owner"]):
+                    numinrow +=1
+                if (position == item['xy']):
+                    hasPosition = 1
+                if ((hasPosition == 1) and (numinrow == 3)):
+                    return 1
+        return 0
+    
+           
+
 def main():
     r = Reader()
     try:
@@ -150,4 +177,4 @@ def main():
         print(oserr)
 if __name__ == "__main__":
     main()
-
+  
