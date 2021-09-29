@@ -37,7 +37,7 @@ class Heuristic():
  #When there is a vertex, the values will get counted for each one, giving them a heavier weight. 
 # Also gives +/- 3 for having 3 in a row.
     def firstPhaseState(self, board):
-        score = 0
+        score = board.get_black_pieces_left() - board.get_white_pieces_left()
         for line in board.get_lines():
             numinrow =0
             last = ""
@@ -54,7 +54,7 @@ class Heuristic():
                     score = score - 1
                     if numinrow == 3:
                         score = score - 3
-                last = item["owner"]     
+                last = item["owner"]  
         return score
 
 
@@ -63,9 +63,9 @@ class Heuristic():
     def secondPhaseState(self, board):
         score = board.get_black_pieces_left() - board.get_white_pieces_left()
         if board.get_black_pieces_left() == 2:
-            score = -10
+            score = -10000
         if board.get_white_pieces_left() == 2:
-            score = +10
+            score = 10000
         return score
 
 
