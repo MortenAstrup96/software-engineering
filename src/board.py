@@ -59,6 +59,12 @@ class Board(object):
 
     def get_white_pieces_left(self):
         return self._white_pieces_left
+    
+    def get_black_pieces_hand(self):
+        return self._black_pieces_in_hand
+
+    def get_white_pieces_hand(self):
+        return self._white_pieces_in_hand
 
     def get_owner(self, position):
         x,y = position
@@ -79,7 +85,7 @@ class Board(object):
                "white left {}\n" \
                "black left {}\n" \
                "size {}\n" \
-               "lines {}\n".format(self._difficulty,
+               "lines \n{}\n".format(self._difficulty,
                                    self._player_turn,
                                    self._white_pieces_in_hand,
                                    self._black_pieces_in_hand,

@@ -1,16 +1,12 @@
-import unittest
 import sys
 import os
 import json
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
-import reader as file_reader
-from game_engine import Engine
-import json
 import os.path  # exists
 from board import Board
 
 # :param: difficulty (int) : 1 low, 2 medium, 3 high
- #       :param: player_turn (bool) : True white, False black
+#       :param: player_turn (bool) : True white, False black
  #       :param: white_pieces_in_hand (int)
  #       :param: black_pieces_in_hand (int)
  #       :param: white_pieces_left (int)
@@ -42,7 +38,7 @@ class Heuristic():
 # Also gives +/- 3 for having 3 in a row.
     def firstPhaseState(self, board):
         score = 0
-        for line in board._lines:
+        for line in board.get_lines():
             numinrow =0
             last = ""
             for item in line:

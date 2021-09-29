@@ -6,7 +6,7 @@ Software-engineering project group B
 14/09/2021
 v0.1
 
-Laurent VOURIOT
+Group B
 """
 
 import json

@@ -1,3 +1,4 @@
+
 import unittest
 import sys
 import os
@@ -6,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 import reader as file_reader
 import board as game_board
 from game_engine import Engine
+
 class TestEngine(unittest.TestCase):
     def test_engine_move(self):
         """
@@ -183,6 +185,25 @@ class TestEngine(unittest.TestCase):
         engine = Engine(board)
         states = engine.all_possible_states_for_remove()
         self.assertEqual(len(states),2)
+
+    def test_minimax(self):
+        """
+        Test for the minimax algorithm.
+        Expected outcome: Finds a good move.
+        """
+        board = game_board.Board("low","white",3,3,12,12,24,[
+        [{"xy":[1,1], "owner": "none"},{"xy":[1,2], "owner":"none"},{"xy":[1,3], "owner":"none"}],
+        [{"xy":[1,1], "owner": "none"},{"xy":[2,1], "owner":"none"},{"xy": [3,1], "owner": "none"}],
+        [{"xy":[3,1], "owner": "none"},{"xy":[4,1], "owner":"none"},{"xy": [5,1], "owner": "none"}],
+        [{"xy":[2,3], "owner": "none"},{"xy":[2,4], "owner":"none"},{"xy": [2,5], "owner": "none"}]])
+        engine = Engine(board)
+        player = 'white'
+        for i in range(6):
+            engine.minimax(6,player,board)
+            board = engine.get_best_board()
+            if player == 'white': player = 'black'
+            elif player == 'black': player = 'white'
+        print(engine.get_best_board())
         
 if __name__ == '__main__':
     unittest.main()

@@ -1,18 +1,21 @@
 from board import Board
 from reader import Reader
+from heuristic import Heuristic
+
 import copy
 class Engine(object):
     """
     Engine class
-
+    
     Takes a board and manipulates it
     """
 
     def __init__(self,board):
         self._board = board
+        self._best_board = None
     """
     Arguments: (start_x, start_y), (end_x, end_y), player color
-    Returns: nothing
+    Returns: The updated lines where the piece has moved
     Moves a piece for player_color from the starting position to the end position.
     Color should be either 'white' or 'black'
     Example: move_piece((1,1),(1,2),"white") returns
@@ -46,6 +49,10 @@ class Engine(object):
             start['owner'] = "none"
         return lines
 
+
+
+
+    
     """
     Arguments: list of lists containing the lines for a board, player color
     Returns: A list of lists of lists containing every possible placement of a piece as a seperate game state.
@@ -82,11 +89,15 @@ class Engine(object):
 
 
 
+
+
+    
     """
     Arguments: list of lists containing the lines for a board, player color
     Returns: A list of lists of lists containing every possible move of a piece as a seperate game state.
     
-    Finds all positions that can be moved to and returns a list of the new states for each found position.
+    Finds all possible pieces that can be removed and returns a new state for each removed piece.
+    Example: 
     """
     def all_possible_states_for_move(self, lines= None, player_color = None):
         if not lines: lines = self._board.get_lines()
@@ -95,8 +106,7 @@ class Engine(object):
         all_states = []
         for line in lines_local:
             for index, item in enumerate(line):
-                if(item['owner'] == player_color):
-                    
+                if(item['owner'] == player_color):                   
                     if index != 0 and index != len(line)-1:
                         before = line[index - 1]
                         after = line[index + 1]
@@ -120,6 +130,15 @@ class Engine(object):
                             all_states.append(ret_val)
         return all_states
 
+
+
+
+    
+    """
+    Arguments: list of lists containing the lines for a board, player color
+    Returns: A list of lists of lists containing every possible removal of piece as a seperate game state.
+    
+    """
     def all_possible_states_for_remove(self, lines = None, player_color = None):
         if not lines: lines = self._board.get_lines()
         if not player_color: player_color = self._board.get_player_turn()
@@ -138,6 +157,71 @@ class Engine(object):
             all_states.append(new_lines)
         return all_states
 
+
+
+
+
+
+
+    
+    def minimax(self,depth, max_player, board):
+        if (depth == 0):
+            heur =  Heuristic()
+            if max_player == 'black':
+                if board.get_black_pieces_hand() > 0:
+                    return heur.firstPhaseState(board)
+                else:
+                    return heur.secondPhaseState(board)
+            else:
+                if board.get_white_pieces_hand() > 0:
+                    return heur.firstPhaseState(board)
+                else:
+                    return heur.secondPhaseState(board)
+        elif max_player == 'white':
+            value = float('inf')
+            if board.get_white_pieces_hand() > 0:
+                all_states = self.all_possible_states_for_place(board.get_lines(), 'white')
+                for lines in all_states:
+                    new_board = Board(board.get_difficulty(), 'black', board.get_white_pieces_hand()-1, board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
+                    new_value = min(value, self.minimax(depth-1, 'black', new_board))
+                    if new_value < value:
+                        value = new_value
+                        self._best_board = new_board
+                return value
+            else:
+                all_states = self.all_possible_states_for_move(board.get_lines(), 'white')
+                for lines in all_states:
+                    new_board = Board(board.get_difficulty(), 'black', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
+                    new_value = min(value, self.minimax(depth-1, 'black', new_board))
+                    if new_value < value:
+                        value = new_value
+                        self._best_board = new_board
+                return value
+        else:
+            value = float('-inf')
+            if board.get_black_pieces_hand() > 0:
+                all_states = self.all_possible_states_for_place(board.get_lines(), 'black')
+                for lines in all_states:
+                    new_board = Board(board.get_difficulty(), 'white', board.get_white_pieces_hand(), board.get_black_pieces_hand()-1, board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
+                    new_value = max(value,self.minimax(depth-1, 'white', new_board))
+                    if new_value > value:
+                        value = new_value
+                        self._best_board = new_board
+                return value
+            else:
+                all_states = self.all_possible_states_for_move(board.get_lines(), 'black')
+                for lines in all_states:
+                    new_board = Board(board.get_difficulty(), 'white', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
+                    new_value = max(value, self.minimax(depth-1, 'white', new_board))
+                    if new_value > value:
+                        value = new_value
+                        self._best_board = new_board
+                return value            
+            
+
+    def get_best_board(self):
+        return self._best_board
+    
 def main():
     r = Reader()
     try:
