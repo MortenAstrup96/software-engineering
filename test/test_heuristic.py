@@ -20,6 +20,6 @@ class testHeuristic(unittest.TestCase):
          engine = Engine(board)
          heuristic = Heuristic()
          check = heuristic.firstPhaseState(board)
-         check = heuristic.secondPhaseState(board)
+#         check = heuristic.secondPhaseState(board)
 
 

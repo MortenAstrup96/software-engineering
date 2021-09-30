@@ -191,26 +191,50 @@ class TestEngine(unittest.TestCase):
         Test for the minimax algorithm.
         Expected outcome: Finds a good move.
         """
-        board = game_board.Board("low",0,"white",6,6,6,6,24,[
+        previous_board = game_board.Board("low",0,"white",6,6,6,6,24,[
         [{"xy":[1,1], "owner": "none"},{"xy":[1,2], "owner":"none"},{"xy":[1,3], "owner":"none"}],
         [{"xy":[1,1], "owner": "none"},{"xy":[2,1], "owner":"none"},{"xy": [3,1], "owner": "none"}],
         [{"xy":[3,1], "owner": "none"},{"xy":[4,1], "owner":"none"},{"xy": [5,1], "owner": "none"}],
         [{"xy":[2,3], "owner": "none"},{"xy":[2,4], "owner":"none"},{"xy": [2,5], "owner": "none"}],
         [{"xy":[3,3], "owner": "none"},{"xy":[3,4], "owner":"none"},{"xy": [3,5], "owner": "none"}],
-        [{"xy":[4,3], "owner": "none"},{"xy":[4,4], "owner":"none"},{"xy": [4,5], "owner": "none"}],
+        # [{"xy":[4,3], "owner": "none"},{"xy":[4,4], "owner":"none"},{"xy": [4,5], "owner": "none"}],
+        # [{"xy":[5,3], "owner": "none"},{"xy":[5,4], "owner":"none"},{"xy": [5,5], "owner": "none"}],
+        # [{"xy":[6,3], "owner": "none"},{"xy":[6,4], "owner":"none"},{"xy": [6,5], "owner": "none"}],
+        # [{"xy":[7,3], "owner": "none"},{"xy":[7,4], "owner":"none"},{"xy": [7,5], "owner": "none"}],
+        # [{"xy":[8,3], "owner": "none"},{"xy":[8,4], "owner":"none"},{"xy": [8,5], "owner": "none"}],
+        # [{"xy":[9,3], "owner": "none"},{"xy":[9,4], "owner":"none"},{"xy": [9,5], "owner": "none"}]
+        ])
+        board = game_board.Board("low",0,"white",9,9,9,9,24,[
+        [{"xy":[1,1], "owner": "none"},{"xy":[1,4], "owner":"none"},{"xy":[1,7], "owner":"none"}],
+        [{"xy":[2,2], "owner": "none"},{"xy":[2,4], "owner":"none"},{"xy": [2,6], "owner": "none"}],
+        [{"xy":[3,3], "owner": "none"},{"xy":[3,4], "owner":"none"},{"xy": [3,5], "owner": "none"}],
+        [{"xy":[4,1], "owner": "none"},{"xy":[4,2], "owner":"none"},{"xy": [4,3], "owner": "none"}],
+        [{"xy":[4,5], "owner": "none"},{"xy":[4,6], "owner":"none"},{"xy": [4,7], "owner": "none"}],
         [{"xy":[5,3], "owner": "none"},{"xy":[5,4], "owner":"none"},{"xy": [5,5], "owner": "none"}],
-        [{"xy":[6,3], "owner": "none"},{"xy":[6,4], "owner":"none"},{"xy": [6,5], "owner": "none"}],
-        [{"xy":[7,3], "owner": "none"},{"xy":[7,4], "owner":"none"},{"xy": [7,5], "owner": "none"}],
-        [{"xy":[8,3], "owner": "none"},{"xy":[8,4], "owner":"none"},{"xy": [8,5], "owner": "none"}],
-        [{"xy":[9,3], "owner": "none"},{"xy":[9,4], "owner":"none"},{"xy": [9,5], "owner": "none"}]])
+        [{"xy":[6,2], "owner": "none"},{"xy":[6,4], "owner":"none"},{"xy": [6,6], "owner": "none"}],
+        [{"xy":[7,1], "owner": "none"},{"xy":[7,4], "owner":"none"},{"xy": [7,7], "owner": "none"}],
+            
+        [{"xy":[1,1], "owner": "none"},{"xy":[4,1], "owner":"none"},{"xy": [7,1], "owner": "none"}],
+        [{"xy":[2,2], "owner": "none"},{"xy":[4,2], "owner":"none"},{"xy": [6,2], "owner": "none"}],
+        [{"xy":[3,3], "owner": "none"},{"xy":[4,3], "owner":"none"},{"xy": [5,3], "owner": "none"}],
+        [{"xy":[1,4], "owner": "none"},{"xy":[2,4], "owner":"none"},{"xy": [3,4], "owner": "none"}],
+        [{"xy":[5,4], "owner": "none"},{"xy":[6,4], "owner":"none"},{"xy": [7,4], "owner": "none"}],
+        [{"xy":[3,5], "owner": "none"},{"xy":[4,5], "owner":"none"},{"xy": [5,5], "owner": "none"}],
+        [{"xy":[2,6], "owner": "none"},{"xy":[4,6], "owner":"none"},{"xy": [6,6], "owner": "none"}],
+        [{"xy":[1,7], "owner": "none"},{"xy":[4,7], "owner":"none"},{"xy": [7,7], "owner": "none"}],
+        ])
         engine = Engine(board)
+        # engine.minimax(4,'white', True, board)
+        # print(engine.get_best_board('white'))
         player = 'white'
-        for i in range(12):
+        for i in range(9):
             engine.minimax(4,player,True, board)
             board = engine.get_best_board(player)
             if player == 'white': player = 'black'
             elif player == 'black': player = 'white'
-        print(board)
+        print("\n")
+        for line in board.get_lines():
+            print(line)
         
 if __name__ == '__main__':
     unittest.main()
