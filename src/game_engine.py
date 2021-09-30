@@ -298,7 +298,7 @@ def main():
         if(board.get_difficulty() == "low"):
             depth = 4
         e = Engine(board)
-        e.minimax(depth,'white',True,board)
+        e.minimax(depth,board.get_player_turn(),True,board)
         board = e.get_best_board('white')
         r.set_board(board)
         r.write("result.json")
