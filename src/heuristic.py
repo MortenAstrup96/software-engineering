@@ -2,7 +2,8 @@ import sys
 import os
 import json
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
-import os.path  # exists
+import os.path  # 
+from collections import defaultdict
 from board import Board
 
 # :param: difficulty (int) : 1 low, 2 medium, 3 high
@@ -32,7 +33,94 @@ class Heuristic():
                 x,y = item["xy"]
                 myArray[x][y] += 1
         return myArray
+    
+    
+    #This isn't checking for all three in a row, it hosuld only be checking the newest piece for 3 in a row
+    def numberOfMorris(self, board):
+        score = 0
+        for line in board.get_lines():
+            numinrow =0
+            last = ""
+            for item in line:
+                if (last == item["owner"]):
+                    numinrow +=1
+                else :
+                    numinrow = 0
+                if item["owner"] == "black":
+                    if numinrow == 2:
+                        score = score + 1
+                elif item["owner"] == "white":
+                    if numinrow == 2:
+                        score = score - 1
+                last = item["owner"]  
+        return score
+    
+    def numberOfPieces(self, board):
+        score = board.get_black_pieces_left() - board.get_white_pieces_left()
+        return score
+    
+    def numberBlockedOpponentPieces(self,board):
+        return
+        
+    def numberOfTwoPiece(self, board):
+       return 
+        
+    def closedMorris(self, board):
+        return
+    
+    def numberThreePiece(self, board):
+        return
+        
+    def doubleMorris(self, board):
+        return
+    
+    def winningState(self, board):
+        score = 0
+        if board.get_black_pieces_left() == 2:
+            score = -1
+        if board.get_white_pieces_left() == 2:
+            score = 1
+        return score
+    
+    def findAllRows(self, board, xy):
+        rows = []
+        for line in board.get_lines():
+            for item in line:
+                if item["xy"] == xy:
+                    rows.push(line);  
+        return rows
 
+
+    def checkForOpen(self, board, color, pos):
+        for xIndex, line in enumerate(board.get_lines()):
+            for yIndex, item in enumerate(line):
+                if item["xy"] == pos:
+                    if ( ((yIndex - 1) > 0 ) and 
+                        ( line[yIndex - 1]["owner"] == color or line[yIndex - 1]["owner"] == "none")):
+                        return 0;
+                    if ( ((yIndex + 1) < len(line) ) and 
+                        ( line[yIndex + 1]["owner"] == color or line[yIndex + 1]["owner"] == "none")):
+                        return 0;
+        return 1;
+                        
+
+    def findEachBlockedPiece(self, board, color):
+        count = 0
+        checked = []
+        for xIndex, line in enumerate(board.get_lines()):
+            for yIndex, item in enumerate(line):
+                if item["owner"] == color:
+                    if item["xy"] in checked:
+                        continue
+                    count += self.checkForOpen( board, color, item["xy"] )
+                    checked.append(item["xy"])
+                    
+        if color == "white":
+            count = count * -1
+        
+        return count
+        
+        
  #counts all the blacks and whites.  
  #When there is a vertex, the values will get counted for each one, giving them a heavier weight. 
 # Also gives +/- 3 for having 3 in a row.
@@ -106,8 +194,10 @@ class Heuristic():
      #   playerArray = np.zeros(board.board_size, board.board_size)
 
 
-#board = Board("low","black",12,12,12,12,24,[
-#    [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"none"},{"xy":[1,3], "owner":"none"}],
-#    [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"none"},{"xy": [3,1], "owner": "none"}] ])
+board = Board("low",0,"black",12,12,12,12,24,[
+        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"white"},{"xy":[1,3], "owner":"none"}],
+        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"none"},{"xy": [3,1], "owner": "none"}] ])
 
-
+board2 = Board("low",0,"black",12,12,12,12,24,[
+        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"white"},{"xy":[1,3], "owner":"none"}],
+        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"white"},{"xy": [3,1], "owner": "none"}] ])
