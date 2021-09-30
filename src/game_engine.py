@@ -180,10 +180,10 @@ class Engine(object):
                     if self.check_three_in_a_row(board, new_board, 'white'):
                         new_board = self.minimax_remove(new_board, 'white')
                     if new_board:
-                            value += heur.firstPhaseState(board) + self.minimax(depth-1, 'black', False, new_board, board)                        
-                    if(first):
-                        new_board.set_value(value)
-                        self._all_first_boards.append(new_board)
+                        value += heur.firstPhaseState(board) + self.minimax(depth-1, 'black', False, new_board, board)                        
+                        if(first):
+                            new_board.set_value(value)
+                            self._all_first_boards.append(new_board)
                 return value
             else:
                 all_states = self.all_possible_states_for_move(board.get_lines(), 'white')
@@ -194,9 +194,9 @@ class Engine(object):
 
                     if new_board:
                         value += heur.secondPhaseState(board, previous_board, 'white') + self.minimax(depth-1, 'black', False, new_board, board)
-                    if(first):
-                        new_board.set_value(value)
-                        self._all_first_boards.append(new_board)
+                        if(first):
+                            new_board.set_value(value)
+                            self._all_first_boards.append(new_board)
 
                 return value
         if max_player == 'black':
@@ -209,9 +209,9 @@ class Engine(object):
                         new_board = self.minimax_remove(new_board, 'black')
                     if new_board:
                         value += heur.firstPhaseState(board) + self.minimax(depth-1, 'white', False, new_board, board)
-                    if(first):
-                        new_board.set_value(value)
-                        self._all_first_boards.append(new_board)
+                        if(first):
+                            new_board.set_value(value)
+                            self._all_first_boards.append(new_board)
                     # if value > old_value:
                     #     self._best_board = new_board
                 
@@ -225,9 +225,9 @@ class Engine(object):
                         new_board = self.minimax_remove(new_board, 'black')
                     if new_board:
                         value += heur.secondPhaseState(board,previous_board, 'black') + self.minimax(depth-1, 'white', False, new_board, board)
-                    if(first):
-                        new_board.set_value(value)
-                        self._all_first_boards.append(new_board)
+                        if(first):
+                            new_board.set_value(value)
+                            self._all_first_boards.append(new_board)
                 return value
 
     def minimax_remove(self,board, max_player):

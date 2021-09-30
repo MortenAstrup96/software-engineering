@@ -227,12 +227,14 @@ class TestEngine(unittest.TestCase):
         # engine.minimax(4,'white', True, board)
         # print(engine.get_best_board('white'))
         player = 'white'
-        for i in range(9):
-            engine.minimax(4,player,True, board)
+        for i in range(1):
+            engine.minimax(5,player,True, board)
             board = engine.get_best_board(player)
             if player == 'white': player = 'black'
             elif player == 'black': player = 'white'
+        
         print("\n")
+        print(board)
         for line in board.get_lines():
             print(line)
         

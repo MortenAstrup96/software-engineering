@@ -140,15 +140,13 @@ class Board(object):
                "black in hand {}\n" \
                "white left {}\n" \
                "black left {}\n" \
-               "size {}\n" \
-               "lines \n{}\n".format(self._difficulty,
+               "size {}\n".format(self._difficulty,
                                    self._player_turn,
                                    self._white_pieces_in_hand,
                                    self._black_pieces_in_hand,
                                    self._white_pieces_left,
                                    self._black_pieces_left,
-                                   self._board_size,
-                                   self._lines)
+                                   self._board_size)
 
 
 
