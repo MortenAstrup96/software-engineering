@@ -212,8 +212,6 @@ class Engine(object):
                         if(first):
                             new_board.set_value(value)
                             self._all_first_boards.append(new_board)
-                    # if value > old_value:
-                    #     self._best_board = new_board
                 
                 return value
             else:
@@ -260,6 +258,7 @@ class Engine(object):
                 if board.get_value() > best_board.get_value():
                     best_board = board
         self._all_first_boards = []
+        best_board.increase_turn_number()
         return best_board
 
 #check the last state to the current state for the move and see if there is a new three in a row.
@@ -292,11 +291,21 @@ class Engine(object):
 def main():
     r = Reader()
     try:
-        file_name = input("json file name : ")
+        file_name = input("JSON file name : ")
         r.read(file_name)
         board = r.board
+        depth = 0
+        if(board.get_difficulty() == "low"):
+            depth = 4
         e = Engine(board)
-        e.all_possible_states_for_place(board.get_lines())
+        e.minimax(depth,'white',True,board)
+        board = e.get_best_board('white')
+        r.set_board(board)
+        r.write("result.json")
+        print("\n")
+        print(board)
+        for line in board.get_lines():
+            print(line)
     except OSError as oserr:
         print(oserr)
 if __name__ == "__main__":

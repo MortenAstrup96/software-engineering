@@ -129,18 +129,21 @@ class Board(object):
     def set_black_pieces_in_hand(self, black_pieces_in_hand): 
         self._black_pieces_in_hand = black_pieces_in_hand
 
-    
+    def increase_turn_number(self):
+        self._turn_number += 1
     def __repr__(self):
         """
         :return: string to show all the attributes of the board for debug
         """
         return "difficulty : {}\n" \
+               "turn number: {}\n" \
                "player_turn : {}\n" \
                "white in hand {}\n" \
                "black in hand {}\n" \
                "white left {}\n" \
                "black left {}\n" \
                "size {}\n".format(self._difficulty,
+                                  self._turn_number,
                                    self._player_turn,
                                    self._white_pieces_in_hand,
                                    self._black_pieces_in_hand,

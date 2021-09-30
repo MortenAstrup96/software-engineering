@@ -77,6 +77,8 @@ class Reader(object):
         """
         return self._board
 
+    def set_board(self, board):
+        self._board = board
 
 # ----------------------------------------------------------------------------------------------------------------------
 
