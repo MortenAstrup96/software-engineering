@@ -130,8 +130,6 @@ class Engine(object):
         return all_states
 
 
-
-
     
     """
     Arguments: list of lists containing the lines for a board, player color
@@ -156,64 +154,74 @@ class Engine(object):
             all_states.append(new_lines)
         return all_states
 
-
     
-    def minimax(self,depth, max_player, first, board, previous_board=None):
-        heur =  Heuristic()
+    def minimax(self,depth, max_player, first, board, a, b, previous_board=None):
+        heur = Heuristic()
         if (depth == 0):            
             if max_player == 'black':
                 if board.get_black_pieces_hand() > 0:
                     return heur.firstPhaseState(board)
                 else:
-                    return heur.secondPhaseState(previous_board, board, 'black')
+                    return heur.secondPhaseState(board, previous_board, 'black')
             else:
                 if board.get_white_pieces_hand() > 0:
                     return heur.firstPhaseState(board)
                 else:
-                    return heur.secondPhaseState(previous_board,board,'white')
+                    value = heur.secondPhaseState(board, previous_board,'white')
+                    return value
         if max_player == 'white':                
-            value = 0#float('inf')
+            best_value = float('inf')
             if board.get_white_pieces_hand() > 0:
                 all_states = self.all_possible_states_for_place(board.get_lines(), 'white')
                 for lines in all_states:
-                    new_board = Board(board.get_difficulty(), board.get_turn_number(), 'black', board.get_white_pieces_hand()-1, board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
+                    new_board = Board(board.get_difficulty(), board.get_turn_number(), 'black', board.get_white_pieces_hand()-1, board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(), lines)
                     if self.check_three_in_a_row(board, new_board, 'white'):
                         new_board = self.minimax_remove(new_board, 'white')
-                    if new_board:
-                        value += heur.firstPhaseState(board) + self.minimax(depth-1, 'black', False, new_board, board)                        
-                        if(first):
-                            new_board.set_value(value)
-                            self._all_first_boards.append(new_board)
-                return value
+                    value = self.minimax(depth-1, 'black', False, new_board, a, b, board)
+                    best_value = min(best_value, value)
+                    b = min(b, best_value)
+                    if b <= a:
+                        break
+                    if(first):
+                        new_board.set_value(best_value)
+                        self._all_first_boards.append(new_board)
+                return best_value
             else:
                 all_states = self.all_possible_states_for_move(board.get_lines(), 'white')
                 for lines in all_states:
                     new_board = Board(board.get_difficulty(), board.get_turn_number(), 'black', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
-                    if self.check_three_in_a_row(board, new_board, 'white'):                
+                    if self.check_three_in_a_row(board, new_board, 'white'):
                         new_board = self.minimax_remove(new_board, 'white')
+    
+                    value =  self.minimax(depth-1, 'black', False, new_board,a,b, board)
+                    best_value = min(best_value, value)
+                    b = min(b, best_value)
+                    if b <=a:
+                        break
+                    if(first):
+                        new_board.set_value(best_value)
+                        self._all_first_boards.append(new_board)
 
-                    if new_board:
-                        value += heur.secondPhaseState(board, previous_board, 'white') + self.minimax(depth-1, 'black', False, new_board, board)
-                        if(first):
-                            new_board.set_value(value)
-                            self._all_first_boards.append(new_board)
-
-                return value
+                return best_value
         if max_player == 'black':
-            value = 0#float('-inf')
+            best_value = float('-inf')
             if board.get_black_pieces_hand() > 0:
                 all_states = self.all_possible_states_for_place(board.get_lines(), 'black')
                 for lines in all_states:
                     new_board = Board(board.get_difficulty(),board.get_turn_number(), 'white', board.get_white_pieces_hand(), board.get_black_pieces_hand()-1, board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
                     if self.check_three_in_a_row(board, new_board, 'black'):                        
                         new_board = self.minimax_remove(new_board, 'black')
-                    if new_board:
-                        value += heur.firstPhaseState(board) + self.minimax(depth-1, 'white', False, new_board, board)
-                        if(first):
-                            new_board.set_value(value)
-                            self._all_first_boards.append(new_board)
+
+                    value = self.minimax(depth-1, 'white', False, new_board,a,b, board)
+                    best_value = max(best_value, value)
+                    a = max(a, best_value)
+                    if b<=a:
+                        break
+                    if(first):
+                        new_board.set_value(best_value)
+                        self._all_first_boards.append(new_board)
                 
-                return value
+                return best_value
             else:
                 all_states = self.all_possible_states_for_move(board.get_lines(), 'black')
                 
@@ -221,17 +229,24 @@ class Engine(object):
                     new_board = Board(board.get_difficulty(), board.get_turn_number(), 'white', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
                     if self.check_three_in_a_row(board, new_board, 'black'):
                         new_board = self.minimax_remove(new_board, 'black')
-                    if new_board:
-                        value += heur.secondPhaseState(board,previous_board, 'black') + self.minimax(depth-1, 'white', False, new_board, board)
-                        if(first):
-                            new_board.set_value(value)
-                            self._all_first_boards.append(new_board)
-                return value
-
+                    value = self.minimax(depth-1, 'white', False, new_board, a, b, board)
+                    best_value = max(best_value, value)
+                    a = max(a,best_value)
+                    if b<=a:
+                        break
+                    if(first):
+                        new_board.set_value(best_value)
+                        self._all_first_boards.append(new_board)
+                return best_value
+    """
+    Arguments: a board, player color
+    Returns: a board where player color has removed on of the opponents pieces.
+    This function finds a good piece to remove from the opponents and removes it from the board.
+    """
     def minimax_remove(self,board, max_player):
         heur = Heuristic()
-        value = 0#float('-inf')
-        best_board = None
+        value = 0 #float('-inf')
+        best_board = board
         all_states = self.all_possible_states_for_remove(board.get_lines(), max_player)
         for lines in all_states:
             if max_player == 'white':
@@ -248,10 +263,16 @@ class Engine(object):
                     best_board = new_board
         return best_board
 
+    """
+    Arguments: player color
+    Returns: The board with the highest or lowest value, depending on the player.
+    This function gets the best board for the chosen player.
+    """
     def get_best_board(self,player):
         best_board = self._all_first_boards[0]
         for board in self._all_first_boards:
             if player == 'white':
+
                 if board.get_value() < best_board.get_value():
                     best_board = board
             else:
@@ -261,8 +282,11 @@ class Engine(object):
         best_board.increase_turn_number()
         return best_board
 
-#check the last state to the current state for the move and see if there is a new three in a row.
-#note: this is expecting the game state to only have the most recent move added.
+    """
+    check the last state to the current state for the move and see if there is a new three in a row for the current player color.
+    note: this is expecting the game state to only have the most recent move added.
+
+    """
     def check_three_in_a_row(self, previousBoard, currentBoard, current_player_color):
         if not previousBoard: return 0
         for xIndex, line in enumerate(previousBoard.get_lines()):
@@ -298,7 +322,7 @@ def main():
         if(board.get_difficulty() == "low"):
             depth = 4
         e = Engine(board)
-        e.minimax(depth,board.get_player_turn(),True,board)
+        e.minimax(depth, board.get_player_turn(), True, board)
         board = e.get_best_board('white')
         r.set_board(board)
         r.write("result.json")

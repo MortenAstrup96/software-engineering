@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 import reader as file_reader
 import board as game_board
 from game_engine import Engine
-
+from heuristic import Heuristic
 class TestEngine(unittest.TestCase):
     def test_engine_move(self):
         """
@@ -191,35 +191,38 @@ class TestEngine(unittest.TestCase):
         Test for the minimax algorithm.
         Expected outcome: Finds a good move.
         """
-        board = game_board.Board("low",0,"white",9,9,9,9,24,[
-        [{"xy":[1,1], "owner": "none"},{"xy":[1,4], "owner":"none"},{"xy":[1,7], "owner":"none"}],
-        [{"xy":[2,2], "owner": "none"},{"xy":[2,4], "owner":"none"},{"xy": [2,6], "owner": "none"}],
+        board = game_board.Board("low",0,"white",2,2,9,9,24,[
+        [{"xy":[1,1], "owner": "white"},{"xy":[1,4], "owner":"white"},{"xy": [1,7], "owner":"none"}],
+        [{"xy":[2,2], "owner": "white"},{"xy":[2,4], "owner":"none"},{"xy": [2,6], "owner": "none"}],
         [{"xy":[3,3], "owner": "none"},{"xy":[3,4], "owner":"none"},{"xy": [3,5], "owner": "none"}],
         [{"xy":[4,1], "owner": "none"},{"xy":[4,2], "owner":"none"},{"xy": [4,3], "owner": "none"}],
         [{"xy":[4,5], "owner": "none"},{"xy":[4,6], "owner":"none"},{"xy": [4,7], "owner": "none"}],
         [{"xy":[5,3], "owner": "none"},{"xy":[5,4], "owner":"none"},{"xy": [5,5], "owner": "none"}],
-        [{"xy":[6,2], "owner": "none"},{"xy":[6,4], "owner":"none"},{"xy": [6,6], "owner": "none"}],
-        [{"xy":[7,1], "owner": "none"},{"xy":[7,4], "owner":"none"},{"xy": [7,7], "owner": "none"}],
+        [{"xy":[6,2], "owner": "none"},{"xy":[6,4], "owner":"black"},{"xy": [6,6], "owner": "black"}],
+        [{"xy":[7,1], "owner": "none"},{"xy":[7,4], "owner":"none"},{"xy": [7,7], "owner": "black"}],
             
-        [{"xy":[1,1], "owner": "none"},{"xy":[4,1], "owner":"none"},{"xy": [7,1], "owner": "none"}],
-        [{"xy":[2,2], "owner": "none"},{"xy":[4,2], "owner":"none"},{"xy": [6,2], "owner": "none"}],
+        [{"xy":[1,1], "owner": "white"},{"xy":[4,1], "owner":"none"},{"xy": [7,1], "owner": "none"}],
+        [{"xy":[2,2], "owner": "white"},{"xy":[4,2], "owner":"none"},{"xy": [6,2], "owner": "none"}],
         [{"xy":[3,3], "owner": "none"},{"xy":[4,3], "owner":"none"},{"xy": [5,3], "owner": "none"}],
-        [{"xy":[1,4], "owner": "none"},{"xy":[2,4], "owner":"none"},{"xy": [3,4], "owner": "none"}],
-        [{"xy":[5,4], "owner": "none"},{"xy":[6,4], "owner":"none"},{"xy": [7,4], "owner": "none"}],
+        [{"xy":[1,4], "owner": "white"},{"xy":[2,4], "owner":"none"},{"xy": [3,4], "owner": "none"}],
+        [{"xy":[5,4], "owner": "none"},{"xy":[6,4], "owner":"black"},{"xy": [7,4], "owner": "none"}],
         [{"xy":[3,5], "owner": "none"},{"xy":[4,5], "owner":"none"},{"xy": [5,5], "owner": "none"}],
-        [{"xy":[2,6], "owner": "none"},{"xy":[4,6], "owner":"none"},{"xy": [6,6], "owner": "none"}],
-        [{"xy":[1,7], "owner": "none"},{"xy":[4,7], "owner":"none"},{"xy": [7,7], "owner": "none"}],
+        [{"xy":[2,6], "owner": "none"},{"xy":[4,6], "owner":"none"},{"xy": [6,6], "owner": "black"}],
+        [{"xy":[1,7], "owner": "none"},{"xy":[4,7], "owner":"none"},{"xy": [7,7], "owner": "black"}],
         ])
         engine = Engine(board)
         player = 'white'
+
         for i in range(1):
-            engine.minimax(4,player,True, board)
+            print(board.get_white_pieces_left(), board.get_black_pieces_left(), board.get_turn_number())
+            engine.minimax(7,player,True, board, float('-inf'),float('inf'))
             board = engine.get_best_board(player)
             if player == 'white': player = 'black'
             elif player == 'black': player = 'white'
         
         print("\n")
         print(board)
+        print(board.get_value())
         for line in board.get_lines():
             print(line)
         

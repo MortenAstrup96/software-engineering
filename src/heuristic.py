@@ -47,14 +47,14 @@ class Heuristic():
                 else :
                     numinrow = 0
                 if item["owner"] == "black":
-                    if numinrow == 2:
+                    if numinrow == 1:
                         score = score + 1
-                    if numinrow == 3:
+                    if numinrow == 2:
                         score = score + 3
                 elif item["owner"] == "white":
-                    if numinrow == 2:
+                    if numinrow == 1:
                         score = score - 1
-                    if numinrow == 3:
+                    if numinrow == 2:
                         score = score - 3
                 last = item["owner"]  
         return score
@@ -64,44 +64,42 @@ class Heuristic():
     #else score is a delta between types of pieces
     def secondPhaseState(self, board, previous_board, current_player_color):
         score = board.get_black_pieces_left() - board.get_white_pieces_left()
-        if(self.check_three_in_a_row(previous_board, board, current_player_color)):
-            if current_player_color == 'white': score -=3
-            else: score+=3
+
         if board.get_black_pieces_left() == 2:
-            score = -10
+            score += -100
         if board.get_white_pieces_left() == 2:
-            score = 10
+            score += 100
         return score
 
 
     def remove_piece_score(self, board, previous_board, removed_from_player_color):
-        score = 0
-        if(self.check_three_in_a_row(board, previous_board, removed_from_player_color)):
+        score = board.get_black_pieces_left() - board.get_white_pieces_left()
+        if(self.check_n_in_a_row(board, previous_board, removed_from_player_color,2)):
             if removed_from_player_color == 'white': score+=3
             else: score-=3
         return score
     
-    def check_three_in_a_row(self, previous_board, current_board, current_player_color):
+    def check_n_in_a_row(self, previous_board, current_board, current_player_color,n):
         if not previous_board: return 0
         for xIndex, line in enumerate(previous_board.get_lines()):
             for yIndex, item in enumerate(line):
-                 if item['owner'] != current_board.get_lines()[xIndex][yIndex]['owner']:                 
-                     return self.three_in_row(current_board, item['xy'], current_player_color)           
+                 if item['owner'] != current_board.get_lines()[xIndex][yIndex]['owner']:
+                     return self.n_in_row(current_board, item['xy'], current_player_color,n)           
         return 0
  
         
-#this function checks for three in a row at a given poisition for a given player color
+#this function checks for n in a row at a given poisition for a given player color
 #it should only be called through check_three_in)a_row to check the latest player move.
-    def three_in_row(self, board, position, current_player_color):        
+    def n_in_row(self, board, position, current_player_color,n):        
         for line in board.get_lines():
             numinrow =0
             hasPosition = 0
             for item in line:
-                if ( current_player_color == item["owner"]):
+                if (current_player_color == item["owner"]):
                     numinrow +=1
                 if (position == item['xy']):
                     hasPosition = 1
-                if ((hasPosition == 1) and (numinrow == 3)):
+                if ((hasPosition == 1) and (numinrow == n)):
                     return 1
         return 0
    # def createPlayerArray(self, board):
