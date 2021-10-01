@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 import os.path  # 
 from collections import defaultdict
 from board import Board
-
+from collections import Counter
 
 #going to analyze everything with the more positive number being a better move for black; 
 #negative better for white.
@@ -27,7 +27,7 @@ class Heuristic():
         return myArray
     
     
-    #This isn't checking for all three in a row, it hosuld only be checking the newest piece for 3 in a row
+    #This isn't checking for all three in a row, it should only be checking the newest piece for 3 in a row
     def numberOfMorris(self, board):
         score = 0
         for line in board.get_lines():
@@ -54,12 +54,75 @@ class Heuristic():
     def closedMorris(self, board):
         return
     
+    def numberTwoPiece(self,board):
+        score = 0
+        for line in board.get_lines():
+            numinrow =0
+            last = ""
+            found_three = False
+            for item in line:
+                if (last == item["owner"]):                        
+                        if item["owner"] == "black":
+                            score = score + 1 - found_three
+                        elif item["owner"] == "white":
+                            score = score - 1 + found_three
+                    
+                last = item["owner"]  
+        return score
+    
     def numberThreePiece(self, board):
-        return
+        score = 0
+        lines = board.get_lines()
+        all_twos = []
+        for line in lines:
+            numinrow =0
+            last_owner = ""
+            last_item = None
+            pos_to_add = []
+            for item in line:
+                if (last_owner != 'none' and last_owner == item["owner"]):
+                    pos_to_add = [last_item, item]
+                    numinrow += 1
+                last_owner = item["owner"]
+                last_item = item
+            if numinrow == 1:
+                all_twos += pos_to_add
+                
+        for item in all_twos:
+            if all_twos.count(item) == 2:
+                all_twos.remove(item)
+                if item['owner'] == 'white': score -= 1
+                else: score +=1
+        return score
         
     def doubleMorris(self, board):
-        return
-    
+        score = 0
+        all_morrises = []
+        for line in board.get_lines():
+            numinrow =0
+            last_owner = ""
+            last_item = None
+            pos_to_add = []
+            for item in line:
+                if (last_owner != 'none' and last_owner == item["owner"]):
+                    numinrow +=1
+                    pos_to_add.append(last_item)
+                else:
+                    numinrow = 0
+                if numinrow == 2:
+                    pos_to_add.append(item)
+                    all_morrises+=pos_to_add
+                    numinrow = 0
+                last_owner = item["owner"]
+                last_item = item
+        for item in all_morrises:
+            if all_morrises.count(item) >= 2:
+                all_morrises.remove(item)
+                if item['owner'] == 'white': score -= 1
+                else: score +=1
+        return score
+
+        
     def winningState(self, board):
         score = 0
         if board.get_black_pieces_left() == 2:
@@ -110,7 +173,7 @@ class Heuristic():
 #This calls the other functions and adds a weight toeach one unique for first phase. .  
     def firstPhaseState(self, board):
        score = 0
-       score = 1 * self.findEachBlockedPiece(board, "black") + 1 * self.findEachBlockedPiece(board, "white") + 0* self.winningState(board) + 9 * self.numberOfPieces(board) + 26 * self.numberOfMorris(board)
+       score = 1 * self.findEachBlockedPiece(board, "black") + 1 * self.findEachBlockedPiece(board, "white") + 0* self.winningState(board) + 9 * self.numberOfPieces(board) + 26 * self.numberOfMorris(board) + 10 * self.numberTwoPiece(board) + 7 * self.numberThreePiece(board)
        return score
 
 
@@ -118,7 +181,7 @@ class Heuristic():
 
     def secondPhaseState(self, board, previous_board, current_player_color):
         score = 0
-        score = 10 * self.findEachBlockedPiece(board, "black") + 10 * self.findEachBlockedPiece(board, "white") + 1086* self.winningState(board) + 11 * self.numberOfPieces(board) + 43 * self.numberOfMorris(board)
+        score = 10 * self.findEachBlockedPiece(board, "black") + 10 * self.findEachBlockedPiece(board, "white") + 1086* self.winningState(board) + 11 * self.numberOfPieces(board) + 43 * self.numberOfMorris(board) + 8*self.doubleMorris(board)
         return score
 
 

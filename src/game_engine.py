@@ -1,7 +1,7 @@
 from board import Board
 from reader import Reader
 from heuristic import Heuristic
-
+import cProfile
 import copy
 class Engine(object):
     """
@@ -101,7 +101,7 @@ class Engine(object):
     def all_possible_states_for_move(self, lines= None, player_color = None):
         if not lines: lines = self._board.get_lines()
         if not player_color: player_color = self._board.get_player_turn()
-        lines_local = copy.deepcopy(lines)
+        lines_local = lines
         all_states = []
         for line in lines_local:
             for index, item in enumerate(line):
@@ -139,7 +139,7 @@ class Engine(object):
     def all_possible_states_for_remove(self, lines = None, player_color = None):
         if not lines: lines = self._board.get_lines()
         if not player_color: player_color = self._board.get_player_turn()
-        lines_local = copy.deepcopy(lines)
+        lines_local = lines#copy.deepcopy(lines)
         all_positions = []
         all_states = []
         for line in lines_local:
@@ -315,17 +315,25 @@ class Engine(object):
 def main():
     r = Reader()
     try:
-        file_name = input("JSON file name : ")
+        #file_name = input("JSON file name : ")
+        file_name = "board.json"
         r.read(file_name)
         board = r.board
         depth = 0
         if(board.get_difficulty() == "low"):
-            depth = 4
-        e = Engine(board)
-        e.minimax(depth, board.get_player_turn(), True, board)
-        board = e.get_best_board('white')
-        r.set_board(board)
-        r.write("result.json")
+            depth = 6
+        engine = Engine(board)
+        #e.minimax(depth, board.get_player_turn(), True, board, float('-inf'),float('inf'))
+        #board = e.get_best_board('white')
+        #r.set_board(board)
+        #r.write("result.json")
+        player = 'white'
+        for i in range(20):
+            print(board.get_white_pieces_left(), board.get_black_pieces_left(), board.get_turn_number())
+            engine.minimax(depth,player,True, board, float('-inf'),float('inf'))
+            board = engine.get_best_board(player)
+            if player == 'white': player = 'black'
+            elif player == 'black': player = 'white'
         print("\n")
         print(board)
         for line in board.get_lines():
@@ -334,4 +342,5 @@ def main():
         print(oserr)
 if __name__ == "__main__":
     main()
+   # cProfile.run('main()')
   
