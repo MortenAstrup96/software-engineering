@@ -50,12 +50,6 @@ class Heuristic():
     def numberOfPieces(self, board):
         score = board.get_black_pieces_left() - board.get_white_pieces_left()
         return score
-    
-    def numberBlockedOpponentPieces(self,board):
-        return
-        
-    def numberOfTwoPiece(self, board):
-       return 
         
     def closedMorris(self, board):
         return
