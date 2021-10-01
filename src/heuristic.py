@@ -6,17 +6,9 @@ import os.path  #
 from collections import defaultdict
 from board import Board
 
-# :param: difficulty (int) : 1 low, 2 medium, 3 high
-#       :param: player_turn (bool) : True white, False black
- #       :param: white_pieces_in_hand (int)
- #       :param: black_pieces_in_hand (int)
- #       :param: white_pieces_left (int)
- #       :param: black_pieces_left (int)
- #       :param: board_size (int)
- #       :param: lines (list(list))
 
-#going to analyze everything with the more positive number going to black; 
-#negative going to better for white.
+#going to analyze everything with the more positive number being a better move for black; 
+#negative better for white.
 
 class Heuristic():
 
@@ -90,7 +82,7 @@ class Heuristic():
                     rows.push(line);  
         return rows
 
-
+#This is called by findEachBlockedPiece.  It is checking for a block.  Could be progressed further as at this point is just testing for single blocks.
     def checkForOpen(self, board, color, pos):
         for xIndex, line in enumerate(board.get_lines()):
             for yIndex, item in enumerate(line):
@@ -103,7 +95,7 @@ class Heuristic():
                         return 0;
         return 1;
                         
-
+#This will check for each spot of one color and identify if it is blocked in.  It will make the value negative if black is blocked in.
     def findEachBlockedPiece(self, board, color):
         count = 0
         checked = []
@@ -115,49 +107,26 @@ class Heuristic():
                     count += self.checkForOpen( board, color, item["xy"] )
                     checked.append(item["xy"])
                     
-        if color == "white":
+        if color == "black":
             count = count * -1
         
         return count
         
         
- #counts all the blacks and whites.  
- #When there is a vertex, the values will get counted for each one, giving them a heavier weight. 
-# Also gives +/- 3 for having 3 in a row.
+#This calls the other functions and adds a weight toeach one unique for first phase. .  
     def firstPhaseState(self, board):
-        score = board.get_black_pieces_left() - board.get_white_pieces_left()
-        for line in board.get_lines():
-            numinrow =0
-            last = ""
-            for item in line:
-                if (last == item["owner"]):
-                    numinrow +=1
-                else :
-                    numinrow = 0
-                if item["owner"] == "black":
-                    if numinrow == 1:
-                        score = score + 1
-                    if numinrow == 2:
-                        score = score + 3
-                elif item["owner"] == "white":
-                    if numinrow == 1:
-                        score = score - 1
-                    if numinrow == 2:
-                        score = score - 3
-                last = item["owner"]  
-        return score
+       score = 0
+       score = 1 * self.findEachBlockedPiece(board, "black") + 1 * self.findEachBlockedPiece(board, "white") + 0* self.winningState(board) + 9 * self.numberOfPieces(board) + 26 * self.numberOfMorris(board)
+       return score
 
 
-    #if a win condition is met, gives a score of =10/-10
-    #else score is a delta between types of pieces
+#This calls the other functions and adds a weight toeach one unique for first phase. .  
+
     def secondPhaseState(self, board, previous_board, current_player_color):
-        score = board.get_black_pieces_left() - board.get_white_pieces_left()
-
-        if board.get_black_pieces_left() == 2:
-            score += -100
-        if board.get_white_pieces_left() == 2:
-            score += 100
+        score = 0
+        score = 10 * self.findEachBlockedPiece(board, "black") + 10 * self.findEachBlockedPiece(board, "white") + 1086* self.winningState(board) + 11 * self.numberOfPieces(board) + 43 * self.numberOfMorris(board)
         return score
+
 
 
     def remove_piece_score(self, board, previous_board, removed_from_player_color):
@@ -190,14 +159,13 @@ class Heuristic():
                 if ((hasPosition == 1) and (numinrow == n)):
                     return 1
         return 0
-   # def createPlayerArray(self, board):
-     #   playerArray = np.zeros(board.board_size, board.board_size)
 
 
-board = Board("low",0,"black",12,12,12,12,24,[
-        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"white"},{"xy":[1,3], "owner":"none"}],
-        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"none"},{"xy": [3,1], "owner": "none"}] ])
+#simple testing boards for Jenn
+#board = Board("low",0,"black",12,10,12,10,24,[
+#        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"white"},{"xy":[1,3], "owner":"none"}],
+#        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"white"},{"xy": [3,1], "owner": "none"}] ])
 
-board2 = Board("low",0,"black",12,12,12,12,24,[
-        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"white"},{"xy":[1,3], "owner":"none"}],
-        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"white"},{"xy": [3,1], "owner": "none"}] ])
+#board2 = Board("low",0,"black",12,12,12,12,24,[
+#        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"black"},{"xy":[1,3], "owner":"black"}],
+#        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"black"},{"xy": [3,1], "owner": "black"}] ])
