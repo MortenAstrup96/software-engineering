@@ -192,45 +192,46 @@ class TestEngine(unittest.TestCase):
         Expected outcome: Finds a good move.
         """
         board = game_board.Board("low",0,"black",2,2,9,9,24,[
-        [{'xy': [1, 1], 'owner': 'white'}, {'xy': [1, 4], 'owner': 'black'}, {'xy': [1, 7], 'owner': 'black'}],
-        [{'xy': [2, 2], 'owner': 'none'}, {'xy': [2, 4], 'owner': 'black'}, {'xy': [2, 6], 'owner': 'black'}],
-        [{'xy': [3, 3], 'owner': 'none'}, {'xy': [3, 4], 'owner': 'none'}, {'xy': [3, 5], 'owner': 'none'}],
-        [{'xy': [4, 1], 'owner': 'black'}, {'xy': [4, 2], 'owner': 'white'}, {'xy': [4, 3], 'owner': 'none'}],
-        [{'xy': [4, 5], 'owner': 'none'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [4, 7], 'owner': 'none'}],
-        [{'xy': [5, 3], 'owner': 'none'}, {'xy': [5, 4], 'owner': 'none'}, {'xy': [5, 5], 'owner': 'none'}],
-        [{'xy': [6, 2], 'owner': 'white'}, {'xy': [6, 4], 'owner': 'white'}, {'xy': [6, 6], 'owner': 'none'}],
-        [{'xy': [7, 1], 'owner': 'white'}, {'xy': [7, 4], 'owner': 'none'}, {'xy': [7, 7], 'owner': 'none'}],
-        [{'xy': [1, 1], 'owner': 'white'}, {'xy': [4, 1], 'owner': 'black'}, {'xy': [7, 1], 'owner': 'white'}],
-        [{'xy': [2, 2], 'owner': 'none'}, {'xy': [4, 2], 'owner': 'white'}, {'xy': [6, 2], 'owner': 'white'}],
-        [{'xy': [3, 3], 'owner': 'none'}, {'xy': [4, 3], 'owner': 'none'}, {'xy': [5, 3], 'owner': 'none'}],
-        [{'xy': [1, 4], 'owner': 'black'}, {'xy': [2, 4], 'owner': 'black'}, {'xy': [3, 4], 'owner': 'none'}],
-        [{'xy': [5, 4], 'owner': 'none'}, {'xy': [6, 4], 'owner': 'white'}, {'xy': [7, 4], 'owner': 'none'}],
-        [{'xy': [3, 5], 'owner': 'none'}, {'xy': [4, 5], 'owner': 'none'}, {'xy': [5, 5], 'owner': 'none'}],
-        [{'xy': [2, 6], 'owner': 'black'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [6, 6], 'owner': 'none'}],
-        [{'xy': [1, 7], 'owner': 'black'}, {'xy': [4, 7], 'owner': 'none'}, {'xy': [7, 7], 'owner': 'none'}],
+            [{'xy': [1, 1], 'owner': 'black'}, {'xy': [1, 4], 'owner': 'black'}, {'xy': [1, 7], 'owner': 'black'}], 
+            [{'xy': [2, 2], 'owner': 'white'}, {'xy': [2, 4], 'owner': 'none'}, {'xy': [2, 6], 'owner': 'none'}],
+            [{'xy': [3, 3], 'owner': 'none'}, {'xy': [3, 4], 'owner': 'none'}, {'xy': [3, 5], 'owner': 'none'}],
+            [{'xy': [4, 1], 'owner': 'white'}, {'xy': [4, 2], 'owner': 'none'}, {'xy': [4, 3], 'owner': 'none'}],
+            [{'xy': [4, 5], 'owner': 'black'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [4, 7], 'owner': 'black'}],
+            [{'xy': [5, 3], 'owner': 'none'}, {'xy': [5, 4], 'owner': 'none'}, {'xy': [5, 5], 'owner': 'none'}],
+            [{'xy': [6, 2], 'owner': 'white'}, {'xy': [6, 4], 'owner': 'none'}, {'xy': [6, 6], 'owner': 'white'}],
+            [{'xy': [7, 1], 'owner': 'white'}, {'xy': [7, 4], 'owner': 'none'}, {'xy': [7, 7], 'owner': 'none'}],
+            [{'xy': [1, 1], 'owner': 'black'}, {'xy': [4, 1], 'owner': 'white'}, {'xy': [7, 1], 'owner': 'white'}],
+            [{'xy': [2, 2], 'owner': 'white'}, {'xy': [4, 2], 'owner': 'none'}, {'xy': [6, 2], 'owner': 'white'}],
+            [{'xy': [3, 3], 'owner': 'none'}, {'xy': [4, 3], 'owner': 'none'}, {'xy': [5, 3], 'owner': 'none'}],
+            [{'xy': [1, 4], 'owner': 'black'}, {'xy': [2, 4], 'owner': 'none'}, {'xy': [3, 4], 'owner': 'none'}],
+            [{'xy': [5, 4], 'owner': 'none'}, {'xy': [6, 4], 'owner': 'none'}, {'xy': [7, 4], 'owner': 'none'}],
+            [{'xy': [3, 5], 'owner': 'none'}, {'xy': [4, 5], 'owner': 'black'}, {'xy': [5, 5], 'owner': 'none'}],
+            [{'xy': [2, 6], 'owner': 'none'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [6, 6], 'owner': 'white'}],
+            [{'xy': [1, 7], 'owner': 'black'}, {'xy': [4, 7], 'owner': 'black'}, {'xy': [7, 7], 'owner': 'none'}],
         ])
         new_board = game_board.Board("low",0,"black",2,2,9,9,24,[
-        [{'xy': [1, 1], 'owner': 'white'}, {'xy': [1, 4], 'owner': 'black'}, {'xy': [1, 7], 'owner': 'black'}],
-        [{'xy': [2, 2], 'owner': 'black'}, {'xy': [2, 4], 'owner': 'black'}, {'xy': [2, 6], 'owner': 'black'}],
-        [{'xy': [3, 3], 'owner': 'none'}, {'xy': [3, 4], 'owner': 'none'}, {'xy': [3, 5], 'owner': 'none'}],
-        [{'xy': [4, 1], 'owner': 'black'}, {'xy': [4, 2], 'owner': 'white'}, {'xy': [4, 3], 'owner': 'none'}],
-        [{'xy': [4, 5], 'owner': 'none'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [4, 7], 'owner': 'none'}],
-        [{'xy': [5, 3], 'owner': 'none'}, {'xy': [5, 4], 'owner': 'none'}, {'xy': [5, 5], 'owner': 'none'}],
-        [{'xy': [6, 2], 'owner': 'white'}, {'xy': [6, 4], 'owner': 'white'}, {'xy': [6, 6], 'owner': 'none'}],
-        [{'xy': [7, 1], 'owner': 'white'}, {'xy': [7, 4], 'owner': 'none'}, {'xy': [7, 7], 'owner': 'none'}],
-        [{'xy': [1, 1], 'owner': 'white'}, {'xy': [4, 1], 'owner': 'black'}, {'xy': [7, 1], 'owner': 'white'}],
-        [{'xy': [2, 2], 'owner': 'black'}, {'xy': [4, 2], 'owner': 'white'}, {'xy': [6, 2], 'owner': 'white'}],
-        [{'xy': [3, 3], 'owner': 'none'}, {'xy': [4, 3], 'owner': 'none'}, {'xy': [5, 3], 'owner': 'none'}],
-        [{'xy': [1, 4], 'owner': 'black'}, {'xy': [2, 4], 'owner': 'black'}, {'xy': [3, 4], 'owner': 'none'}],
-        [{'xy': [5, 4], 'owner': 'none'}, {'xy': [6, 4], 'owner': 'white'}, {'xy': [7, 4], 'owner': 'none'}],
-        [{'xy': [3, 5], 'owner': 'none'}, {'xy': [4, 5], 'owner': 'none'}, {'xy': [5, 5], 'owner': 'none'}],
-        [{'xy': [2, 6], 'owner': 'black'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [6, 6], 'owner': 'none'}],
-        [{'xy': [1, 7], 'owner': 'black'}, {'xy': [4, 7], 'owner': 'none'}, {'xy': [7, 7], 'owner': 'none'}],
+[{'xy': [1, 1], 'owner': 'black'}, {'xy': [1, 4], 'owner': 'black'}, {'xy': [1, 7], 'owner': 'black'}],
+[{'xy': [2, 2], 'owner': 'white'}, {'xy': [2, 4], 'owner': 'none'}, {'xy': [2, 6], 'owner': 'none'}],
+[{'xy': [3, 3], 'owner': 'none'}, {'xy': [3, 4], 'owner': 'none'}, {'xy': [3, 5], 'owner': 'none'}],
+[{'xy': [4, 1], 'owner': 'none'}, {'xy': [4, 2], 'owner': 'white'}, {'xy': [4, 3], 'owner': 'none'}],
+[{'xy': [4, 5], 'owner': 'black'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [4, 7], 'owner': 'black'}],
+[{'xy': [5, 3], 'owner': 'none'}, {'xy': [5, 4], 'owner': 'none'}, {'xy': [5, 5], 'owner': 'none'}],
+[{'xy': [6, 2], 'owner': 'white'}, {'xy': [6, 4], 'owner': 'none'}, {'xy': [6, 6], 'owner': 'white'}],
+[{'xy': [7, 1], 'owner': 'white'}, {'xy': [7, 4], 'owner': 'none'}, {'xy': [7, 7], 'owner': 'none'}],
+[{'xy': [1, 1], 'owner': 'black'}, {'xy': [4, 1], 'owner': 'none'}, {'xy': [7, 1], 'owner': 'white'}],
+[{'xy': [2, 2], 'owner': 'white'}, {'xy': [4, 2], 'owner': 'white'}, {'xy': [6, 2], 'owner': 'white'}],
+[{'xy': [3, 3], 'owner': 'none'}, {'xy': [4, 3], 'owner': 'none'}, {'xy': [5, 3], 'owner': 'none'}],
+[{'xy': [1, 4], 'owner': 'black'}, {'xy': [2, 4], 'owner': 'none'}, {'xy': [3, 4], 'owner': 'none'}],
+[{'xy': [5, 4], 'owner': 'none'}, {'xy': [6, 4], 'owner': 'none'}, {'xy': [7, 4], 'owner': 'none'}],
+[{'xy': [3, 5], 'owner': 'none'}, {'xy': [4, 5], 'owner': 'black'}, {'xy': [5, 5], 'owner': 'none'}],
+[{'xy': [2, 6], 'owner': 'none'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [6, 6], 'owner': 'white'}],
+            [{'xy': [1, 7], 'owner': 'black'}, {'xy': [4, 7], 'owner': 'black'}, {'xy': [7, 7], 'owner': 'none'}],
+
         ])
         engine = Engine(board)
         player = 'black'
         heur = Heuristic()
-        print(heur.closedMorris(new_board,board,'black'))
+        print(engine.check_three_in_a_row(board,new_board, 'white'))
         
         # for i in range(1):
         #     print(board.get_white_pieces_left(), board.get_black_pieces_left(), board.get_turn_number())

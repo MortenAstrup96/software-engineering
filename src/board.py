@@ -97,6 +97,9 @@ class Board(object):
             position = next((item for item in line if item["xy"] == [x,y]), None) #Finds the position and its owner if it exists.
             if position: return position['owner']
         return "none"
+    def get_player_pieces_in_hand(self, player):
+        if player == 'white': return self._white_pieces_in_hand
+        else: return self._black_pieces_in_hand
     
     # SETTERS
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -182,7 +182,7 @@ class Heuristic():
             nm_last = ""
             twp_numinrow =0
             twp_last = ""
-            found_three = False
+            found_two = False
 
             for x, item in enumerate(line):
                  blocked = False
@@ -226,10 +226,11 @@ class Heuristic():
 
                  if (twp_last == item["owner"]):                        
                         if item["owner"] == "black":
-                            twp_score = twp_score + 1 - found_three
+                            twp_score = twp_score + 1 - found_two * 2
+                            found_two = True
                         elif item["owner"] == "white":
-                            twp_score = twp_score - 1 + found_three
-                    
+                            twp_score = twp_score - 1 + found_two * 2
+                            found_two = True
                  twp_last = item["owner"]  
     
 
@@ -270,21 +271,14 @@ class Heuristic():
         score = 10 * self.findEachBlockedPiece(board) + 1086* self.winningState(board) + 11 * self.numberOfPieces(board) + 43 * self.numberOfMorris(board) + 8*self.doubleMorris(board) + 14 * self.closedMorris(board, previous_board, current_player_color)
         return score
 
-
-
-    def remove_piece_score(self, board, previous_board, removed_from_player_color):
-        score = board.get_black_pieces_left() - board.get_white_pieces_left()
-        if(self.check_n_in_a_row(board, previous_board, removed_from_player_color,2)):
-            if removed_from_player_color == 'white': score+=3
-            else: score-=3
-        return score
     
     def check_n_in_a_row(self, previous_board, current_board, current_player_color,n):
         if not previous_board: return 0
         for xIndex, line in enumerate(previous_board.get_lines()):
             for yIndex, item in enumerate(line):
                  if item['owner'] != current_board.get_lines()[xIndex][yIndex]['owner']:
-                     return self.n_in_row(current_board, item['xy'], current_player_color,n)           
+                     if self.n_in_row(current_board, item['xy'], current_player_color,n):
+                         return 1
         return 0
  
         

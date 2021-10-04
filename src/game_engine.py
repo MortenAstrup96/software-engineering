@@ -5,6 +5,7 @@ from game_platform import Game_Platform
 import cProfile
 import copy
 import os
+import sys
 class Engine(object):
     """
     Engine class
@@ -12,7 +13,7 @@ class Engine(object):
     Takes a board and manipulates it
     """
 
-    def __init__(self,board):
+    def __init__(self,board = None):
         self._board = board
         self._all_first_boards = []
 
@@ -104,7 +105,7 @@ class Engine(object):
     def all_possible_states_for_move(self, lines= None, player_color = None):
         if not lines: lines = self._board.get_lines()
         if not player_color: player_color = self._board.get_player_turn()
-        lines_local = lines
+        lines_local = copy.deepcopy(lines)
         all_states = []
         for line in lines_local:
             for index, item in enumerate(line):
@@ -144,7 +145,7 @@ class Engine(object):
     def all_possible_states_for_remove(self, lines = None, player_color = None):
         if not lines: lines = self._board.get_lines()
         if not player_color: player_color = self._board.get_player_turn()
-        lines_local = lines#copy.deepcopy(lines)
+        lines_local = copy.deepcopy(lines)
         all_positions = []
         all_states = []
         for line in lines_local:
@@ -175,23 +176,23 @@ class Engine(object):
                     value = heur.secondPhaseState(board, previous_board,'white')
                     return value
         if max_player == 'white':                
-            best_value = float('inf')
+            value = float('inf')
             if board.get_white_pieces_hand() > 0:
                 all_states = self.all_possible_states_for_place(board.get_lines(), 'white')
                 for lines in all_states:
                     new_board = Board(board.get_difficulty(), board.get_turn_number(), 'black', board.get_white_pieces_hand()-1, board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(), lines)
                     if self.check_three_in_a_row(board, new_board, 'white'):
                         new_board = self.minimax_remove(new_board, 'white')
-                    value = self.minimax(depth-1, 'black', False, new_board, a, b, board)
-                    best_value = min(best_value, value)
-                    b = min(b, best_value)
+
+                    value = min(value, self.minimax(depth-1, 'black', False, new_board,a,b, board))
+                    if value <= a:
+                        break
+                    b = min(b,value)
                     if(first):
                         new_board.set_value(value)
                         self._all_first_boards.append(new_board)
                         
-                    if b<=a:
-                        break
-                return best_value
+                return value
             else:
                 all_states = self.all_possible_states_for_move(board.get_lines(), 'white')
                 for lines in all_states:
@@ -199,17 +200,16 @@ class Engine(object):
                     if self.check_three_in_a_row(board, new_board, 'white'):
                         new_board = self.minimax_remove(new_board, 'white')
     
-                    value =  self.minimax(depth-1, 'black', False, new_board,a,b, board)
-                    best_value = min(best_value, value)
-                    b = min(b, best_value)
+                    value = min(value, self.minimax(depth-1, 'black', False, new_board,a,b, board))
+                    if value <= a:
+                        break
+                    b = min(b,value)
                     if(first):
                         new_board.set_value(value)
                         self._all_first_boards.append(new_board)
-                    if b<=a:
-                        break
-                return best_value
+                return value
         if max_player == 'black':
-            best_value = float('-inf')
+            value = float('-inf')
             if board.get_black_pieces_hand() > 0:
                 all_states = self.all_possible_states_for_place(board.get_lines(), 'black')
                 for lines in all_states:
@@ -217,15 +217,14 @@ class Engine(object):
                     if self.check_three_in_a_row(board, new_board, 'black'):                        
                         new_board = self.minimax_remove(new_board, 'black')
 
-                    value = self.minimax(depth-1, 'white', False, new_board,a,b, board)
-                    best_value = max(best_value, value)
-                    a = max(a, best_value)
+                    value = max(value, self.minimax(depth-1, 'white', False, new_board,a,b, board))
+                    if value >= b:
+                        break
+                    a = max(a,value)
                     if(first):
                         new_board.set_value(value)
                         self._all_first_boards.append(new_board)
-                    if b<=a:
-                        break
-                return best_value
+                return value
             else:
                 all_states = self.all_possible_states_for_move(board.get_lines(), 'black')
                 
@@ -233,16 +232,15 @@ class Engine(object):
                     new_board = Board(board.get_difficulty(), board.get_turn_number(), 'white', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
                     if self.check_three_in_a_row(board, new_board, 'black'):
                         new_board = self.minimax_remove(new_board, 'black')
-                    value = self.minimax(depth-1, 'white', False, new_board, a, b, board)
-                    best_value = max(best_value, value)
-                    a = max(a,best_value)
+
+                    value = max(value, self.minimax(depth-1, 'white', False, new_board,a,b, board))
+                    if value >= b:
+                        break
+                    a = max(a, value)
                     if(first):
                         new_board.set_value(value)
                         self._all_first_boards.append(new_board)
-                        
-                    if b<=a:
-                        break
-                return best_value
+                return value
     """
     Arguments: a board, player color
     Returns: a board where player color has removed on of the opponents pieces.
@@ -250,19 +248,21 @@ class Engine(object):
     """
     def minimax_remove(self,board, max_player):
         heur = Heuristic()
-        value = 0 #float('-inf')
+        value = 0
+        if max_player == 'white': value = float('inf')
+        else: value = float('-inf')
         best_board = board
         all_states = self.all_possible_states_for_remove(board.get_lines(), max_player)
         for lines in all_states:
             if max_player == 'white':
                 new_board = Board(board.get_difficulty(),board.get_turn_number(), 'black', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left()-1,board.get_board_size(),lines)
-                new_value = heur.remove_piece_score(new_board,board,'black')
+                new_value = heur.secondPhaseState(new_board,board,'white')
                 if new_value < value:
                     value = new_value
                     best_board = new_board
             else:
                 new_board = Board(board.get_difficulty(), board.get_turn_number(),'white', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left()-1,board.get_black_pieces_left(),board.get_board_size(),lines)
-                new_value = heur.remove_piece_score(new_board, board, 'white')
+                new_value = heur.secondPhaseState(new_board, board, 'black')
                 if new_value > value:
                     value = new_value
                     best_board = new_board
@@ -274,6 +274,9 @@ class Engine(object):
     This function gets the best board for the chosen player.
     """
     def get_best_board(self,player):
+        if not self._all_first_boards:
+            print("Found no moves")
+            sys.exit()
         best_board = self._all_first_boards[0]
         for board in self._all_first_boards:
             if player == 'white':
@@ -285,6 +288,7 @@ class Engine(object):
                     best_board = board
         self._all_first_boards = []
         best_board.increase_turn_number()
+        print("best", best_board.get_value())
         return best_board
 
     """
@@ -296,14 +300,13 @@ class Engine(object):
         if not previousBoard: return 0
         for xIndex, line in enumerate(previousBoard.get_lines()):
             for yIndex, item in enumerate(line):
-                 if item['owner'] != currentBoard.get_lines()[xIndex][yIndex]['owner']:                 
-                     return self.three_in_row(currentBoard, item['xy'], current_player_color)           
+                 if item['owner'] != currentBoard.get_lines()[xIndex][yIndex]['owner']:
+                     if self.three_in_row(currentBoard, item['xy'], current_player_color):
+                         return 1
         return 0
  
         
-#this function checks for three in a row at a given poisition for a given player color
-#it should only be called through check_three_in_a_row to check the latest player move.
-    def three_in_row(self, board, position, current_player_color):        
+    def three_in_row(self, board, position, current_player_color):
         for line in board.get_lines():
             numinrow = 0
             hasPosition = 0
@@ -317,6 +320,28 @@ class Engine(object):
         return 0
     
 
+    def easy_mode(self, board):
+        depth = 2
+        player = board.get_player_turn()
+        self.minimax(depth, player, True, board, float('-inf'),float('inf'))
+        board = self.get_best_board(player)
+        return board
+
+
+    def medium_mode(self, board):
+        depth = 4
+        player = board.get_player_turn()
+        self.minimax(depth, player, True, board, float('-inf'),float('inf'))
+        board = self.get_best_board(player)
+        return board
+    
+    def hard_mode(self, board):
+        depth = 6
+        player = board.get_player_turn()
+        self.minimax(depth, player, True, board, float('-inf'),float('inf'))
+        board = self.get_best_board(player)
+        return board
+    
 def main():
     r = Reader()
     try:
@@ -328,32 +353,33 @@ def main():
         diff = 0
         while diff not in [1,2,3]:
             os.system('clear')
-            print("Welcome to the Nine men's morris game!")
             print("Difficulty mode [low = 1, medium = 2, high = 3]\n")
             diff = input("Mode: ")
             try: diff = int(diff)
             except: pass
-        depth = diff*2
         gp = Game_Platform()
-        player = 'white'
+        engine = Engine()
         while board.get_black_pieces_left() > 2 and board.get_white_pieces_left() > 2:
-            gp.print_board(board)
-            engine = Engine(board)
-                    
+            gp.print_board(board)                   
             previous_board = copy.deepcopy(board)
             if(board.get_white_pieces_hand() > 0):
-                gp.ask_place(board)
+                gp.ask_place(board,'white')
             else:
-                gp.ask_move(board, engine)
-    
+                gp.ask_move(board, 'white')
             if(engine.check_three_in_a_row(previous_board, board, "white")):
-                gp.ask_remove(board)
-            
+                gp.ask_remove(board,'white')
             board.increase_turn_number()
-            board.set_player_turn = 'black'
-            engine.minimax(depth,'black', True, board, float('-inf'), float('inf'))
-            board = engine.get_best_board(player)
+            board.set_player_turn('black')
+            print("Black's turn")
+            print("Thinking\033[5m...\033[0m")
+            if diff == 1:
+                board = engine.easy_mode(board)
+            if diff == 2:
+                board = engine.medium_mode(board)
+            if diff == 3:
+                board = engine.hard_mode(board)
 
+        gp.print_board(board)
         if board.get_black_pieces_left() < 3: print("White won")
         else: print("Black won")
     except OSError as oserr:
