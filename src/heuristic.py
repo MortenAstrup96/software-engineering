@@ -51,8 +51,11 @@ class Heuristic():
         score = board.get_black_pieces_left() - board.get_white_pieces_left()
         return score
         
-    def closedMorris(self, board):
-        return
+    def closedMorris(self, board, previous_board, player_color):
+        if self.check_n_in_a_row(previous_board, board, player_color, 3):
+            if player_color == 'white': return -1
+            if player_color == 'black': return 1
+        return 0
     
     def numberTwoPiece(self,board):
         score = 0
@@ -131,49 +134,132 @@ class Heuristic():
             score = 1
         return score
     
-    def findAllRows(self, board, xy):
-        rows = []
-        for line in board.get_lines():
-            for item in line:
-                if item["xy"] == xy:
-                    rows.push(line);  
-        return rows
-
-#This is called by findEachBlockedPiece.  It is checking for a block.  Could be progressed further as at this point is just testing for single blocks.
-    def checkForOpen(self, board, color, pos):
-        for xIndex, line in enumerate(board.get_lines()):
-            for yIndex, item in enumerate(line):
-                if item["xy"] == pos:
-                    if ( ((yIndex - 1) > 0 ) and 
-                        ( line[yIndex - 1]["owner"] == color or line[yIndex - 1]["owner"] == "none")):
-                        return 0;
-                    if ( ((yIndex + 1) < len(line) ) and 
-                        ( line[yIndex + 1]["owner"] == color or line[yIndex + 1]["owner"] == "none")):
-                        return 0;
-        return 1;
-                        
+    
 #This will check for each spot of one color and identify if it is blocked in.  It will make the value negative if black is blocked in.
-    def findEachBlockedPiece(self, board, color):
-        count = 0
-        checked = []
-        for xIndex, line in enumerate(board.get_lines()):
-            for yIndex, item in enumerate(line):
-                if item["owner"] == color:
-                    if item["xy"] in checked:
+    def findEachBlockedPiece(self, board):
+        block_list = []
+        for line in board.get_lines():
+            for x, item in enumerate(line):
+                blocked = False
+                try:
+                    if x == 0 and line[x+1]['owner'] != 'none':
+                        block_list.append(item)
                         continue
-                    count += self.checkForOpen( board, color, item["xy"] )
-                    checked.append(item["xy"])
-                    
-        if color == "black":
-            count = count * -1
-        
+                except: None
+                try:
+                    if line[x-1]['owner'] != 'none':
+                        blocked = True
+                    else:
+                        continue
+                except: None
+                try:
+                    if line[x+1]['owner'] != 'none':
+                        blocked = True
+                    else:
+                        blocked = False
+                except: None
+                if blocked: block_list.append(item)
+        count = 0
+        for item in block_list:
+            if block_list.count(item) > 1:
+                if item['owner'] == 'white':count += 1
+                else: count -= 1
+            block_list.remove(item)
         return count
-        
-        
+
+    def firstPhaseLoops(self, board):
+        lines = board.get_lines()
+        block_list = []
+        tp_all_twos = []
+        nm_score = 0
+        twp_score = 0
+        for line in lines:
+            tp_numinrow =0
+            tp_last_owner = ""
+            tp_last_item = None
+            tp_pos_to_add = []
+            nm_numinrow =0
+            nm_last = ""
+            twp_numinrow =0
+            twp_last = ""
+            found_three = False
+
+            for x, item in enumerate(line):
+                 blocked = False
+                 try:
+                     if x == 0 and line[x+1]['owner'] != 'none':
+                         block_list.append(item)
+                         continue
+                 except: None
+                 try:
+                     if line[x-1]['owner'] != 'none':
+                         blocked = True
+                     else:
+                         continue
+                 except: None
+                 try:
+                     if line[x+1]['owner'] != 'none':
+                         blocked = True
+                     else:
+                         blocked = False
+                 except: None
+                 if blocked: block_list.append(item)
+
+
+                 if (tp_last_owner != 'none' and tp_last_owner == item["owner"]):
+                    tp_pos_to_add = [tp_last_item, item]
+                    tp_numinrow += 1
+                 tp_last_owner = item["owner"]
+                 tp_last_item = item
+
+                 if (nm_last == item["owner"]):
+                    nm_numinrow +=1
+                 else :
+                    nm_numinrow = 0
+                 if item["owner"] == "black":
+                    if nm_numinrow == 2:
+                        nm_score = nm_score + 1
+                 elif item["owner"] == "white":
+                    if nm_numinrow == 2:
+                        nm_score = nm_score - 1
+                 nm_last = item["owner"]
+
+                 if (twp_last == item["owner"]):                        
+                        if item["owner"] == "black":
+                            twp_score = twp_score + 1 - found_three
+                        elif item["owner"] == "white":
+                            twp_score = twp_score - 1 + found_three
+                    
+                 twp_last = item["owner"]  
+    
+
+                 
+            if tp_numinrow == 1:
+                tp_all_twos += tp_pos_to_add
+
+            
+                 
+        blocked_count = 0
+        tp_count = 0
+        for item in block_list:
+            if block_list.count(item) >= 2:
+                if item['owner'] == 'white':blocked_count += 1
+                else: blocked_count -= 1
+                block_list.remove(item)
+            
+        for item in tp_all_twos:
+            if tp_all_twos.count(item) == 2:
+                tp_all_twos.remove(item)
+                if item['owner'] == 'white': tp_count -= 1
+                else: tp_count +=1
+        return blocked_count + 7 * tp_count + 26 * nm_score + 10*twp_score
+
 #This calls the other functions and adds a weight toeach one unique for first phase. .  
-    def firstPhaseState(self, board):
+    def firstPhaseState(self, board, previous_board, player_color):
        score = 0
-       score = 1 * self.findEachBlockedPiece(board, "black") + 1 * self.findEachBlockedPiece(board, "white") + 0* self.winningState(board) + 9 * self.numberOfPieces(board) + 26 * self.numberOfMorris(board) + 10 * self.numberTwoPiece(board) + 7 * self.numberThreePiece(board)
+       score = 9 * self.numberOfPieces(board)  + self.firstPhaseLoops(board)
+       if previous_board:
+           score += 18 * self.closedMorris(board, previous_board, player_color)
        return score
 
 
@@ -181,7 +267,7 @@ class Heuristic():
 
     def secondPhaseState(self, board, previous_board, current_player_color):
         score = 0
-        score = 10 * self.findEachBlockedPiece(board, "black") + 10 * self.findEachBlockedPiece(board, "white") + 1086* self.winningState(board) + 11 * self.numberOfPieces(board) + 43 * self.numberOfMorris(board) + 8*self.doubleMorris(board)
+        score = 10 * self.findEachBlockedPiece(board) + 1086* self.winningState(board) + 11 * self.numberOfPieces(board) + 43 * self.numberOfMorris(board) + 8*self.doubleMorris(board) + 14 * self.closedMorris(board, previous_board, current_player_color)
         return score
 
 

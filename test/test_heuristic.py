@@ -19,7 +19,7 @@ class testHeuristic(unittest.TestCase):
     [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"none"},{"xy": [3,1], "owner": "none"}] ])
          engine = Engine(board)
          heuristic = Heuristic()
-         check = heuristic.firstPhaseState(board)
+      #   check = heuristic.firstPhaseState(board)
 #         check = heuristic.secondPhaseState(board)
 
 

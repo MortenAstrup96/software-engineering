@@ -1,8 +1,10 @@
 from board import Board
 from reader import Reader
 from heuristic import Heuristic
+from game_platform import Game_Platform
 import cProfile
 import copy
+import os
 class Engine(object):
     """
     Engine class
@@ -13,6 +15,9 @@ class Engine(object):
     def __init__(self,board):
         self._board = board
         self._all_first_boards = []
+
+
+    
     """
     Arguments: (start_x, start_y), (end_x, end_y), player color
     Returns: The updated lines where the piece has moved
@@ -24,28 +29,26 @@ class Engine(object):
         if not lines: lines = self._board.get_lines()
         start_x, start_y = start
         end_x, end_y = end
-        list_of_starts = []
-        list_of_ends = []
+        moves = []
         for line in lines:
-            start_position = next((item for item in line if item["xy"] == [start_x,start_y]), None)
-            end_position = next((item for item in line if item["xy"] == [end_x,end_y]), None)
-            #print(start_position)
-            if start_position and start_position['owner'] == "none":
-                return -1  #Returns error code -1 if move is illegal
-            elif start_position:
-                list_of_starts.append(start_position) 
+            start_item = None
+            end_item = None
+            for item in line:
+                if item['xy'] == [start_x, start_y]:
+                    start_item = item
+                if item['xy'] == [end_x, end_y]:
+                    end_item = item
+            if start_item and end_item and start_item != end_item and start_item['owner'] == player_color and end_item['owner'] == 'none':
+                moves.append([start_item,end_item])
 
-            if end_position and end_position['owner'] != "none":
-                return -1 #Returns error code -1 if move is illegal
-            elif end_position:
-                list_of_ends.append(end_position)
-        if list_of_ends == [] or list_of_starts == []:
-            return -1
-        
-        for end in list_of_ends:
-            end["owner"] = player_color
-        for start in list_of_starts:
-            start['owner'] = "none"
+        if not moves: return False
+
+        for line in lines:
+            for item in line:
+                for move in moves:
+                    if item['xy'] == move[1]['xy']: item['owner'] = player_color
+                    elif item['xy'] == move[0]['xy']: item['owner'] = 'none'
+
         return lines
 
 
@@ -111,21 +114,23 @@ class Engine(object):
                         after = line[index + 1]
                         if(before['owner'] == 'none'):
                             ret_val = self.move_piece(tuple(item['xy']),tuple(before['xy']),player_color,copy.deepcopy(lines_local))
-                            if ret_val == -1: return ret_val
+                            if not ret_val: return ret_val
                             all_states.append(ret_val)
-                        if(after['owner'] == 'none'):                            
-                            all_states.append(self.move_piece(tuple(item['xy']),tuple(after['xy']),player_color,copy.deepcopy(lines_local)))
+                        if(after['owner'] == 'none'):
+                            ret_val = self.move_piece(tuple(item['xy']),tuple(after['xy']),player_color,copy.deepcopy(lines_local))
+                            if not ret_val: return ret_val
+                            all_states.append(ret_val)
                     elif index == 0 and len(line) > 1:
                         after = line[index + 1]
                         if(after['owner'] == 'none'):
                             ret_val = self.move_piece(tuple(item['xy']),tuple(after['xy']),player_color,copy.deepcopy(lines_local))
-                            if ret_val == -1: return ret_val
+                            if not ret_val: return ret_val
                             all_states.append(ret_val)
                     elif index == len(line) -1:
                         before = line[index - 1]
                         if(before['owner'] == 'none'):
                             ret_val = self.move_piece(tuple(item['xy']),tuple(before['xy']),player_color,copy.deepcopy(lines_local))
-                            if ret_val == -1: return ret_val
+                            if not ret_val: return ret_val
                             all_states.append(ret_val)
         return all_states
 
@@ -160,12 +165,12 @@ class Engine(object):
         if (depth == 0):            
             if max_player == 'black':
                 if board.get_black_pieces_hand() > 0:
-                    return heur.firstPhaseState(board)
+                    return heur.firstPhaseState(board, previous_board, 'black')
                 else:
                     return heur.secondPhaseState(board, previous_board, 'black')
             else:
                 if board.get_white_pieces_hand() > 0:
-                    return heur.firstPhaseState(board)
+                    return heur.firstPhaseState(board, previous_board, 'white')
                 else:
                     value = heur.secondPhaseState(board, previous_board,'white')
                     return value
@@ -180,11 +185,12 @@ class Engine(object):
                     value = self.minimax(depth-1, 'black', False, new_board, a, b, board)
                     best_value = min(best_value, value)
                     b = min(b, best_value)
-                    if b <= a:
-                        break
                     if(first):
-                        new_board.set_value(best_value)
+                        new_board.set_value(value)
                         self._all_first_boards.append(new_board)
+                        
+                    if b<=a:
+                        break
                 return best_value
             else:
                 all_states = self.all_possible_states_for_move(board.get_lines(), 'white')
@@ -196,12 +202,11 @@ class Engine(object):
                     value =  self.minimax(depth-1, 'black', False, new_board,a,b, board)
                     best_value = min(best_value, value)
                     b = min(b, best_value)
-                    if b <=a:
-                        break
                     if(first):
-                        new_board.set_value(best_value)
+                        new_board.set_value(value)
                         self._all_first_boards.append(new_board)
-
+                    if b<=a:
+                        break
                 return best_value
         if max_player == 'black':
             best_value = float('-inf')
@@ -215,12 +220,11 @@ class Engine(object):
                     value = self.minimax(depth-1, 'white', False, new_board,a,b, board)
                     best_value = max(best_value, value)
                     a = max(a, best_value)
+                    if(first):
+                        new_board.set_value(value)
+                        self._all_first_boards.append(new_board)
                     if b<=a:
                         break
-                    if(first):
-                        new_board.set_value(best_value)
-                        self._all_first_boards.append(new_board)
-                
                 return best_value
             else:
                 all_states = self.all_possible_states_for_move(board.get_lines(), 'black')
@@ -232,11 +236,12 @@ class Engine(object):
                     value = self.minimax(depth-1, 'white', False, new_board, a, b, board)
                     best_value = max(best_value, value)
                     a = max(a,best_value)
+                    if(first):
+                        new_board.set_value(value)
+                        self._all_first_boards.append(new_board)
+                        
                     if b<=a:
                         break
-                    if(first):
-                        new_board.set_value(best_value)
-                        self._all_first_boards.append(new_board)
                 return best_value
     """
     Arguments: a board, player color
@@ -291,16 +296,16 @@ class Engine(object):
         if not previousBoard: return 0
         for xIndex, line in enumerate(previousBoard.get_lines()):
             for yIndex, item in enumerate(line):
-                 if item['owner'] != currentBoard._lines[xIndex][yIndex]['owner']:                 
+                 if item['owner'] != currentBoard.get_lines()[xIndex][yIndex]['owner']:                 
                      return self.three_in_row(currentBoard, item['xy'], current_player_color)           
         return 0
  
         
 #this function checks for three in a row at a given poisition for a given player color
-#it should only be called through check_three_in)a_row to check the latest player move.
+#it should only be called through check_three_in_a_row to check the latest player move.
     def three_in_row(self, board, position, current_player_color):        
         for line in board.get_lines():
-            numinrow =0
+            numinrow = 0
             hasPosition = 0
             for item in line:
                 if ( current_player_color == item["owner"]):
@@ -320,26 +325,40 @@ def main():
         r.read(file_name)
         board = r.board
         depth = 0
-        if(board.get_difficulty() == "low"):
-            depth = 6
-        engine = Engine(board)
-        #e.minimax(depth, board.get_player_turn(), True, board, float('-inf'),float('inf'))
-        #board = e.get_best_board('white')
-        #r.set_board(board)
-        #r.write("result.json")
+        diff = 0
+        while diff not in [1,2,3]:
+            os.system('clear')
+            print("Welcome to the Nine men's morris game!")
+            print("Difficulty mode [low = 1, medium = 2, high = 3]\n")
+            diff = input("Mode: ")
+            try: diff = int(diff)
+            except: pass
+        depth = diff*2
+        gp = Game_Platform()
         player = 'white'
-        for i in range(20):
-            print(board.get_white_pieces_left(), board.get_black_pieces_left(), board.get_turn_number())
-            engine.minimax(depth,player,True, board, float('-inf'),float('inf'))
+        while board.get_black_pieces_left() > 2 and board.get_white_pieces_left() > 2:
+            gp.print_board(board)
+            engine = Engine(board)
+                    
+            previous_board = copy.deepcopy(board)
+            if(board.get_white_pieces_hand() > 0):
+                gp.ask_place(board)
+            else:
+                gp.ask_move(board, engine)
+    
+            if(engine.check_three_in_a_row(previous_board, board, "white")):
+                gp.ask_remove(board)
+            
+            board.increase_turn_number()
+            board.set_player_turn = 'black'
+            engine.minimax(depth,'black', True, board, float('-inf'), float('inf'))
             board = engine.get_best_board(player)
-            if player == 'white': player = 'black'
-            elif player == 'black': player = 'white'
-        print("\n")
-        print(board)
-        for line in board.get_lines():
-            print(line)
+
+        if board.get_black_pieces_left() < 3: print("White won")
+        else: print("Black won")
     except OSError as oserr:
         print(oserr)
+
 if __name__ == "__main__":
     main()
    # cProfile.run('main()')
