@@ -1,5 +1,5 @@
 """
-reader_tests.py
+test_reader.py
 
 Software-engineering project group B
 
