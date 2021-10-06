@@ -167,8 +167,9 @@ class Heuristic():
                 else: count -= 1
             block_list.remove(item)
         return count
+    
     """
-    This function calculates several heuristics in the same loop iterations to avoid traversing the list so many times.
+    This function calculates several heuristics in the same loop iterations to avoid traversing the list so many times. To understand the heuristic functions better please examine the functions above instead as they are essentially the same, just not bunched together into one loop.
     """
     def firstPhaseLoops(self, board):
         lines = board.get_lines()
@@ -277,6 +278,7 @@ class Heuristic():
     def thirdPhaseState(self, board, previous_board):
         score = 16 * self.closedMorris(board, previous_board) + 10 * self.numberTwoPiece(board) + self.numberThreePiece(board) + 1190 * self.winningState(board)
         return score
+    
     def check_n_in_a_row(self, previous_board, current_board, current_player_color,n):
         if not previous_board: return 0
         for xIndex, line in enumerate(previous_board.get_lines()):

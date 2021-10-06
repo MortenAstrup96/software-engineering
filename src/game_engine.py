@@ -53,8 +53,6 @@ class Engine(object):
         return lines
 
 
-
-
     
     """
     Arguments: list of lists containing the lines for a board, player color
@@ -188,8 +186,12 @@ class Engine(object):
                 new_lines.append([pos if (pos['xy'] == item['xy']) else item for item in line])
             all_states.append(new_lines)
         return all_states
-
     
+    """
+    Arguments: depth, maximizing player color, first iteration (bool), board, alpha value, beta value, board from the previus iteration
+    Returns: The best value for the maximizing player
+    Note: This is a recursive function that runs until depth is 0. The parameter first determines if the function is in its first call or if it has been recursivly called. Please set first to True when calling this function from elsewhere. This function will update the list _all_first_boards with all the possible next moves the engine function found.
+    """
     def minimax(self,depth, max_player, first, board, a, b, previous_board=None):
         heur = Heuristic()
         if (depth == 0):            
@@ -337,7 +339,9 @@ class Engine(object):
     """
     Arguments: player color
     Returns: The board with the highest or lowest value, depending on the player.
-    This function gets the best board for the chosen player.
+    This function gets the best board for the chosen player from the list _all_first_boards.
+    This function should be called after the minimax funtion is done to ensure that the list is updated with all
+    new possible moves
     """
     def get_best_board(self,player):
         if not self._all_first_boards:
@@ -453,6 +457,7 @@ def main():
         r.write("result.json")
     except OSError as oserr:
         print(oserr)
+
 
 if __name__ == "__main__":
     main()
