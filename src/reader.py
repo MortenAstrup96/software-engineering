@@ -66,7 +66,7 @@ class Reader(object):
 
         # if file_name doesn't exists, the file is created
         with open(file_name, "w") as json_file:
-            json_file.write(json.dumps(board_data))
+            json.dump(board_data,json_file, indent=4,separators=(',', ': '))
         json_file.close()
     
 

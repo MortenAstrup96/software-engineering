@@ -178,7 +178,7 @@ class TestEngine(unittest.TestCase):
     def test_engine_all_possible_states_for_remove(self):
         """
         Test for finding all states for removing a piece.
-        Expected outcome: 2 states are be found.
+        Expected outcome: 2 states are found.
         """
         board = game_board.Board("low",0,"white",12,12,12,12,24,[
         [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"black"},{"xy":[1,3], "owner":"none"}],
@@ -187,14 +187,47 @@ class TestEngine(unittest.TestCase):
         states = engine.all_possible_states_for_remove()
         self.assertEqual(len(states),2)
 
-    def test_minimax(self):
+    def test_engine_all_possible_states_for_remove_with_mill(self):
         """
-        Test for the minimax algorithm.
-        Expected outcome: Finds a good move.
+        Test for finding all states for removing a piece with a mill and another piece on the board.
+        Expected outcome: 1 state is found since three black pieces form a mill.
         """
-        r = file_reader.Reader()
-        r.read('src/board.json')
-        board = r.board
+        board = game_board.Board("low",0,"white",12,12,12,12,24,[
+        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"black"},{"xy":[1,3], "owner":"black"}],
+        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"white"},{"xy": [3,1], "owner": "black"}]]) 
+        engine = Engine(board)
+        states = engine.all_possible_states_for_remove()
+        self.assertEqual(len(states),1)
+
+    def test_engine_all_possible_states_for_remove_with_only_mill(self):
+        """
+        Test for finding all states for removing a piece with only a mill on the board.
+        Expected outcome: 3 states are found since the mill are the only black pieces.
+        """
+        board = game_board.Board("low",0,"white",12,12,12,12,24,[
+        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"black"},{"xy":[1,3], "owner":"black"}],
+        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"white"},{"xy": [3,1], "owner": "none"}]]) 
+        engine = Engine(board)
+        states = engine.all_possible_states_for_remove()
+        self.assertEqual(len(states),3)
+
+    def test_engine_all_possible_states_for_remove_with_long_mill(self):
+        """
+        Test for finding all states for removing a piece with a long mill and another piece on the board.
+        Expected outcome: 1 state is found since five black pieces form a mill. 
+        """
+        board = game_board.Board("low",0,"white",12,12,12,12,24,[
+        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"black"},{"xy":[1,3], "owner":"black"},{"xy":[1,4], "owner":"black"},{"xy":[1,5],"owner":"black"}],
+        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"white"},{"xy": [3,1], "owner": "black"}]]) 
+        engine = Engine(board)
+        states = engine.all_possible_states_for_remove()
+        self.assertEqual(len(states),1)
+        
+    def test_engine_all_possible_states_for_jump(self):
+        """
+        Test for finding all states for moving a piece anywhere on the board.
+        Expected outcome: 4 states are found since there are 4 empty positions to move to.
+        """
         board = game_board.Board("low",0,"black",12,12,12,12,24,[
         [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"none"},{"xy":[1,3], "owner":"none"}],
         [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"none"},{"xy": [3,1], "owner": "none"}]]) 
@@ -205,6 +238,16 @@ class TestEngine(unittest.TestCase):
 
         self.assertEqual(len(states),4)
 
+        
+    def test_minimax(self):
+        """
+        Test for the minimax algorithm.
+        Expected outcome: Finds a good move.
+        """
+        r = file_reader.Reader()
+        r.read('src/board.json')
+        board = r.board
+        
         
 if __name__ == '__main__':
     unittest.main()

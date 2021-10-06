@@ -391,7 +391,9 @@ class Engine(object):
                     already_three = True
                     if index == len(line)-1: return 1
                     if for_remove: return 1
-
+                    
+                if has_position and num_in_row > 3 and for_remove:
+                    return 1
         return 0
     
 
@@ -435,43 +437,20 @@ class Engine(object):
 def main():
     r = Reader()
     try:
-        #file_name = input("JSON file name : ")
         file_name = "board.json"
         r.read(file_name)
         board = r.board
-        depth = 0
-        diff = 0
-        while diff not in [1,2,3]:
-            os.system('clear')
-            print("Difficulty mode [low = 1, medium = 2, high = 3]\n")
-            diff = input("Mode: ")
-            try: diff = int(diff)
-            except: pass
-        gp = Game_Platform()
-        engine = Engine()
-        while board.get_black_pieces_left() > 2 and board.get_white_pieces_left() > 2:
-            gp.print_board(board)                   
-            previous_board = copy.deepcopy(board)
-            if(board.get_white_pieces_hand() > 0):
-                gp.ask_place(board,'white')
-            else:
-                gp.ask_move(board, 'white')
-            if(engine.check_three_in_a_row(previous_board, board, "white")):
-                gp.ask_remove(board,'white')
-            board.increase_turn_number()
-            board.set_player_turn('black')
-            print("Black's turn")
-            print("Thinking\033[5m...\033[0m")
-            if diff == 1:
-                board = engine.easy_mode(board)
-            if diff == 2:
-                board = engine.medium_mode(board)
-            if diff == 3:
-                board = engine.hard_mode(board)
+        diff = board.get_difficulty()
+        e = Engine()
+        if diff == 'low':
+            board = e.easy_mode(board)
+        if diff == 'medium':
+            board = e.medium_mode(board)
+        if diff == 'high':
+            board = e.hard_mode(board)
 
-        gp.print_board(board)
-        if board.get_black_pieces_left() < 3: print("White won")
-        else: print("Black won")
+        r.set_board(board)
+        r.write("result.json")
     except OSError as oserr:
         print(oserr)
 
