@@ -30,13 +30,23 @@ class Game_Platform(object):
         for line in board.get_lines():
             numinrow = 0
             hasPosition = 0
-            for item in line:
-                if ( current_player_color == item["owner"]):
-                    numinrow +=1
-                if (position == item['xy']):
-                    hasPosition = 1
-                if ((hasPosition == 1) and (numinrow == 3)):
+            already_three = False
+            for index, item in enumerate(line):
+                if (current_player_color == item["owner"]) and already_three:
+                    return 0
+                elif already_three:
                     return 1
+                elif current_player_color == item['owner']:
+                    numinrow += 1
+                else:
+                    hasPosition = 0
+                if (position == item['xy'] and item['owner'] == current_player_color):
+                    hasPosition = 1
+             
+                if ((hasPosition == 1) and (numinrow == 3)):
+                    already_three = True
+                    if index == len(line)-1: return 1
+
         return 0
 
     def move_piece(self, start, end, player_color, lines = None):
@@ -92,13 +102,14 @@ class Game_Platform(object):
         if move == "V": ret = [1,7]
         if move == "W": ret = [4,7]
         if move == "X": ret = [7,7]
+        if move == "Y": ret = [4,4]
         return ret
 
 
     
     def print_board(self, board):
         os.system('clear')
-        letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X"]
+        letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y"]
 
         lines = board.get_lines()
         for line in lines:
@@ -134,27 +145,28 @@ class Game_Platform(object):
                 if item['xy'] == [1,7]: V = item['owner']
                 if item['xy'] == [4,7]: W = item['owner']
                 if item['xy'] == [7,7]: X = item['owner']
-        positions = [A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X]
+                if item["xy"] == [4,4]: Y = item['owner']
+        positions = [A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y]
         for index, pos in enumerate(positions):
             if pos == 'white': positions[index] = f"\033[0;30;47m{letters[index]}\033[0;0m"
             if pos == 'black': positions[index] = f"\033[0;37;40m{letters[index]}\033[0;0m"
             if pos == 'none': positions[index] = f"\033[0;32m{letters[index]}\033[0;0m"
-        [A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X] = positions
+        [A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y] = positions
         str = "["+A+"]—————————————["+B+"]—————————————["+C+"]" + "      UU-Game\n"\
               " | \             |             / |\n"\
               " |  \            |            /  |\n"\
               " |   ["+D+"]————————["+E+"]————————["+F+"]   |" + "       Rules:\n"\
-              " |    | \        |        / |    |" + "       In the first phase each player needs to place \n"\
-              " |    |  \       |       /  |    |" + "       all their pieces on the board. If a player manages \n"\
+              " |    |          |          |    |" + "       In the first phase each player needs to place \n"\
+              " |    |          |          |    |" + "       all their pieces on the board. If a player manages \n"\
               " |    |   ["+G+"]———["+H+"]———["+I+"]   |    |" + "       to get three pieces in a row they can remove a \n"\
-              " |    |    |           |    |    |"+ "       piece from the opponent. Once all pieces are placed \n"\
-              " |    |    |           |    |    |"+ "       they can be moved along the lines. The first player\n"\
-              "["+J+"]——["+K+"]——["+L+"]         ["+M+"]——["+N+"]——["+O+"]" + "      to get down to 2 pieces loses.\n"\
-              " |    |    |           |    |    |\n"\
-              " |    |    |           |    |    |\n"\
+              " |    |    | \   |   / |    |    |"+ "       piece from the opponent. Once all pieces are placed \n"\
+              " |    |    |  \  |  /  |    |    |"+ "       they can be moved along the lines. The first player\n"\
+              "["+J+"]——["+K+"]——["+L+"]———["+Y+"]———["+M+"]——["+N+"]——["+O+"]" + "      to get down to 2 pieces loses.\n"\
+              " |    |    |  /  |  \  |    |    |\n"\
+              " |    |    | /   |   \ |    |    |\n"\
               " |    |   ["+P+"]———["+Q+"]———["+R+"]   |    |\n"\
-              " |    |  /       |       \  |    |\n"\
-              " |    | /        |        \ |    |\n"\
+              " |    |          |          |    |\n"\
+              " |    |          |          |    |\n"\
               " |   ["+S+"]————————["+T+"]————————["+U+"]   |\n"\
               " |  /            |            \  |" + f"       Turn: {board.get_turn_number()}\n"\
               " | /             |             \ |" + f"       White left: {board.get_white_pieces_left()}  Black left: {board.get_black_pieces_left()} \n"\
@@ -225,13 +237,14 @@ class Game_Platform(object):
         
     def place_piece(self, position, player_color, board):
         lines = board.get_lines()
-        lines_before = copy.deepcopy(lines)
         for line in lines:
             for item in line:
-                if item['xy'] == position and item['owner'] == 'none':
+                if item['xy'] == position and item['owner'] != 'none':
+                    return False
+                if item['xy'] == position:
                     item['owner'] = player_color
                     
-        return not lines == lines_before
+        return True
 
     def remove_piece(self, position, player_color, board):
         lines = board.get_lines()
@@ -257,7 +270,7 @@ class Game_Platform(object):
 
     def play_local(self):
         reader = Reader()
-        reader.read('board.json')
+        reader.read('board_demo.json')
         board = reader.board
         player = 'white'
         while board.get_black_pieces_left() > 0 and board.get_white_pieces_left() > 0 and board.get_turn_number() <= 200:

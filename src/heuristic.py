@@ -51,10 +51,11 @@ class Heuristic():
         score = board.get_black_pieces_left() - board.get_white_pieces_left()
         return score
         
-    def closedMorris(self, board, previous_board, player_color):
-        if self.check_n_in_a_row(previous_board, board, player_color, 3):
-            if player_color == 'white': return -1
-            if player_color == 'black': return 1
+    def closedMorris(self, board, previous_board):
+        if self.check_n_in_a_row(previous_board, board, 'white', 3):
+            return -1
+        if self.check_n_in_a_row(previous_board, board, 'black', 3):
+            return 1
         return 0
     
     def numberTwoPiece(self,board):
@@ -166,7 +167,9 @@ class Heuristic():
                 else: count -= 1
             block_list.remove(item)
         return count
-
+    """
+    This function calculates several heuristics in the same loop iterations to avoid traversing the list so many times.
+    """
     def firstPhaseLoops(self, board):
         lines = board.get_lines()
         block_list = []
@@ -256,22 +259,24 @@ class Heuristic():
         return blocked_count + 7 * tp_count + 26 * nm_score + 10*twp_score
 
 #This calls the other functions and adds a weight toeach one unique for first phase. .  
-    def firstPhaseState(self, board, previous_board, player_color):
+    def firstPhaseState(self, board, previous_board):
        score = 0
        score = 9 * self.numberOfPieces(board)  + self.firstPhaseLoops(board)
        if previous_board:
-           score += 18 * self.closedMorris(board, previous_board, player_color)
+           score += 18 * self.closedMorris(board, previous_board)
        return score
 
 
 #This calls the other functions and adds a weight toeach one unique for first phase. .  
 
-    def secondPhaseState(self, board, previous_board, current_player_color):
+    def secondPhaseState(self, board, previous_board):
         score = 0
-        score = 10 * self.findEachBlockedPiece(board) + 1086* self.winningState(board) + 11 * self.numberOfPieces(board) + 43 * self.numberOfMorris(board) + 8*self.doubleMorris(board) + 14 * self.closedMorris(board, previous_board, current_player_color)
+        score = 10 * self.findEachBlockedPiece(board) + 1086* self.winningState(board) + 11 * self.numberOfPieces(board) + 43 * self.numberOfMorris(board) + 8*self.doubleMorris(board) + 14 * self.closedMorris(board, previous_board)
         return score
 
-    
+    def thirdPhaseState(self, board, previous_board):
+        score = 16 * self.closedMorris(board, previous_board) + 10 * self.numberTwoPiece(board) + self.numberThreePiece(board) + 1190 * self.winningState(board)
+        return score
     def check_n_in_a_row(self, previous_board, current_board, current_player_color,n):
         if not previous_board: return 0
         for xIndex, line in enumerate(previous_board.get_lines()):

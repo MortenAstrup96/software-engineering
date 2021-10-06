@@ -8,6 +8,7 @@ import reader as file_reader
 import board as game_board
 from game_engine import Engine
 from heuristic import Heuristic
+from game_platform_demo import Game_Platform
 class TestEngine(unittest.TestCase):
     def test_engine_move(self):
         """
@@ -62,7 +63,7 @@ class TestEngine(unittest.TestCase):
     def test_engine_all_possible_states_for_place(self):
         """
         Test if engine finds all states for placing on a partially populated board.
-        Expected outcome: The engine finds 5 states after white has placed its piece. The first state's first line should have a white piece on the second position on the line.
+        Expected outcome: The engine finds 5 states after white has placed its piece. The first states first line should have a white piece on the second position on the line.
         """
         board = game_board.Board("low",0,"white",12,12,12,12,24,[
         [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"white"},{"xy":[1,3], "owner":"none"}],
@@ -191,59 +192,19 @@ class TestEngine(unittest.TestCase):
         Test for the minimax algorithm.
         Expected outcome: Finds a good move.
         """
-        board = game_board.Board("low",0,"black",2,2,9,9,24,[
-            [{'xy': [1, 1], 'owner': 'black'}, {'xy': [1, 4], 'owner': 'black'}, {'xy': [1, 7], 'owner': 'black'}], 
-            [{'xy': [2, 2], 'owner': 'white'}, {'xy': [2, 4], 'owner': 'none'}, {'xy': [2, 6], 'owner': 'none'}],
-            [{'xy': [3, 3], 'owner': 'none'}, {'xy': [3, 4], 'owner': 'none'}, {'xy': [3, 5], 'owner': 'none'}],
-            [{'xy': [4, 1], 'owner': 'white'}, {'xy': [4, 2], 'owner': 'none'}, {'xy': [4, 3], 'owner': 'none'}],
-            [{'xy': [4, 5], 'owner': 'black'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [4, 7], 'owner': 'black'}],
-            [{'xy': [5, 3], 'owner': 'none'}, {'xy': [5, 4], 'owner': 'none'}, {'xy': [5, 5], 'owner': 'none'}],
-            [{'xy': [6, 2], 'owner': 'white'}, {'xy': [6, 4], 'owner': 'none'}, {'xy': [6, 6], 'owner': 'white'}],
-            [{'xy': [7, 1], 'owner': 'white'}, {'xy': [7, 4], 'owner': 'none'}, {'xy': [7, 7], 'owner': 'none'}],
-            [{'xy': [1, 1], 'owner': 'black'}, {'xy': [4, 1], 'owner': 'white'}, {'xy': [7, 1], 'owner': 'white'}],
-            [{'xy': [2, 2], 'owner': 'white'}, {'xy': [4, 2], 'owner': 'none'}, {'xy': [6, 2], 'owner': 'white'}],
-            [{'xy': [3, 3], 'owner': 'none'}, {'xy': [4, 3], 'owner': 'none'}, {'xy': [5, 3], 'owner': 'none'}],
-            [{'xy': [1, 4], 'owner': 'black'}, {'xy': [2, 4], 'owner': 'none'}, {'xy': [3, 4], 'owner': 'none'}],
-            [{'xy': [5, 4], 'owner': 'none'}, {'xy': [6, 4], 'owner': 'none'}, {'xy': [7, 4], 'owner': 'none'}],
-            [{'xy': [3, 5], 'owner': 'none'}, {'xy': [4, 5], 'owner': 'black'}, {'xy': [5, 5], 'owner': 'none'}],
-            [{'xy': [2, 6], 'owner': 'none'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [6, 6], 'owner': 'white'}],
-            [{'xy': [1, 7], 'owner': 'black'}, {'xy': [4, 7], 'owner': 'black'}, {'xy': [7, 7], 'owner': 'none'}],
-        ])
-        new_board = game_board.Board("low",0,"black",2,2,9,9,24,[
-[{'xy': [1, 1], 'owner': 'black'}, {'xy': [1, 4], 'owner': 'black'}, {'xy': [1, 7], 'owner': 'black'}],
-[{'xy': [2, 2], 'owner': 'white'}, {'xy': [2, 4], 'owner': 'none'}, {'xy': [2, 6], 'owner': 'none'}],
-[{'xy': [3, 3], 'owner': 'none'}, {'xy': [3, 4], 'owner': 'none'}, {'xy': [3, 5], 'owner': 'none'}],
-[{'xy': [4, 1], 'owner': 'none'}, {'xy': [4, 2], 'owner': 'white'}, {'xy': [4, 3], 'owner': 'none'}],
-[{'xy': [4, 5], 'owner': 'black'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [4, 7], 'owner': 'black'}],
-[{'xy': [5, 3], 'owner': 'none'}, {'xy': [5, 4], 'owner': 'none'}, {'xy': [5, 5], 'owner': 'none'}],
-[{'xy': [6, 2], 'owner': 'white'}, {'xy': [6, 4], 'owner': 'none'}, {'xy': [6, 6], 'owner': 'white'}],
-[{'xy': [7, 1], 'owner': 'white'}, {'xy': [7, 4], 'owner': 'none'}, {'xy': [7, 7], 'owner': 'none'}],
-[{'xy': [1, 1], 'owner': 'black'}, {'xy': [4, 1], 'owner': 'none'}, {'xy': [7, 1], 'owner': 'white'}],
-[{'xy': [2, 2], 'owner': 'white'}, {'xy': [4, 2], 'owner': 'white'}, {'xy': [6, 2], 'owner': 'white'}],
-[{'xy': [3, 3], 'owner': 'none'}, {'xy': [4, 3], 'owner': 'none'}, {'xy': [5, 3], 'owner': 'none'}],
-[{'xy': [1, 4], 'owner': 'black'}, {'xy': [2, 4], 'owner': 'none'}, {'xy': [3, 4], 'owner': 'none'}],
-[{'xy': [5, 4], 'owner': 'none'}, {'xy': [6, 4], 'owner': 'none'}, {'xy': [7, 4], 'owner': 'none'}],
-[{'xy': [3, 5], 'owner': 'none'}, {'xy': [4, 5], 'owner': 'black'}, {'xy': [5, 5], 'owner': 'none'}],
-[{'xy': [2, 6], 'owner': 'none'}, {'xy': [4, 6], 'owner': 'none'}, {'xy': [6, 6], 'owner': 'white'}],
-            [{'xy': [1, 7], 'owner': 'black'}, {'xy': [4, 7], 'owner': 'black'}, {'xy': [7, 7], 'owner': 'none'}],
+        r = file_reader.Reader()
+        r.read('src/board.json')
+        board = r.board
+        board = game_board.Board("low",0,"black",12,12,12,12,24,[
+        [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"none"},{"xy":[1,3], "owner":"none"}],
+        [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"none"},{"xy": [3,1], "owner": "none"}]]) 
 
-        ])
-        engine = Engine(board)
-        player = 'black'
-        heur = Heuristic()
-        print(engine.check_three_in_a_row(board,new_board, 'white'))
         
-        # for i in range(1):
-        #     print(board.get_white_pieces_left(), board.get_black_pieces_left(), board.get_turn_number())
-        #     engine.minimax(3,player,True, board, float('-inf'),float('inf'))
-        #     board = engine.get_best_board(player)
-        #     if player == 'white': player = 'black'
-        #     elif player == 'black': player = 'white'
-            
-        # print("\n")
-        # print(board)
-        # for line in board.get_lines():
-        #     print(line)
+        engine = Engine(board)
+        states = engine.all_possible_states_for_jump()
+
+        self.assertEqual(len(states),4)
+
         
 if __name__ == '__main__':
     unittest.main()

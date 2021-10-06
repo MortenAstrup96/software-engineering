@@ -90,11 +90,30 @@ class Engine(object):
             all_states.append(new_lines)
         return all_states
 
-
-
-
-
+    """
+    Arguments: list of lists containing the lines for a board, player color
+    Returns: A list of lists of lists containing every possible jump for a piece as a seperate game state.
     
+    """
+    def all_possible_states_for_jump(self, lines = None, player_color = None):
+        if not lines: lines = self._board.get_lines()
+        if not player_color: player_color = self._board.get_player_turn()
+        all_states_for_place = self.all_possible_states_for_place(lines, player_color)
+        items = []
+        all_states = []
+        for y,line in enumerate(lines):
+            for x, item in enumerate(line):
+                if item['owner'] == player_color and item not in items:
+                    items.append(item)
+
+        for org_item in items:
+            local_states = copy.deepcopy(all_states_for_place)
+            for lines in local_states:
+                for line in lines:
+                    for item in line:
+                        if item['xy'] == org_item['xy']: item['owner'] = 'none'
+            all_states += local_states
+        return all_states
     """
     Arguments: list of lists containing the lines for a board, player color
     Returns: A list of lists of lists containing every possible move of a piece as a seperate game state.
@@ -148,10 +167,20 @@ class Engine(object):
         lines_local = copy.deepcopy(lines)
         all_positions = []
         all_states = []
+        other_player_color = ""
+        if player_color == 'white': other_player_color = 'black'
+        else: other_player_color = 'white'
         for line in lines_local:
             for index, item in enumerate(line):
-                if(item['owner'] != player_color and item['owner'] != 'none' and item not in all_positions):
+                if(item['owner'] != player_color and item['owner'] != 'none' and item not in all_positions and not self.three_in_row(lines, item['xy'], other_player_color, True)):
                     all_positions.append(item.copy())
+
+        if not all_positions:
+            for line in lines_local:
+                for index, item in enumerate(line):
+                    if(item['owner'] != player_color and item['owner'] != 'none' and item not in all_positions):
+                        all_positions.append(item.copy())
+
         for pos in all_positions:
             pos['owner'] = 'none'
             new_lines = []
@@ -166,15 +195,19 @@ class Engine(object):
         if (depth == 0):            
             if max_player == 'black':
                 if board.get_black_pieces_hand() > 0:
-                    return heur.firstPhaseState(board, previous_board, 'black')
+                    return heur.firstPhaseState(board, previous_board)
+                elif board.get_black_pieces_left() == 3:
+                    return heur.thirdPhaseState(board, previous_board)
                 else:
-                    return heur.secondPhaseState(board, previous_board, 'black')
+                    return heur.secondPhaseState(board, previous_board)
             else:
                 if board.get_white_pieces_hand() > 0:
-                    return heur.firstPhaseState(board, previous_board, 'white')
+                    return heur.firstPhaseState(board, previous_board)
+                elif board.get_white_pieces_left() == 3:
+                    return heur.thirdPhaseState(board, previous_board)
                 else:
-                    value = heur.secondPhaseState(board, previous_board,'white')
-                    return value
+                    return heur.secondPhaseState(board, previous_board)
+                    
         if max_player == 'white':                
             value = float('inf')
             if board.get_white_pieces_hand() > 0:
@@ -185,13 +218,28 @@ class Engine(object):
                         new_board = self.minimax_remove(new_board, 'white')
 
                     value = min(value, self.minimax(depth-1, 'black', False, new_board,a,b, board))
-                    if value <= a:
-                        break
-                    b = min(b,value)
                     if(first):
                         new_board.set_value(value)
                         self._all_first_boards.append(new_board)
+                    if value <= a:
+                        break
+                    b = min(b,value)
                         
+                return value
+            elif board.get_white_pieces_left() == 3:
+                all_states = self.all_possible_states_for_jump(board.get_lines(), 'white')
+                for lines in all_states:
+                    new_board = Board(board.get_difficulty(), board.get_turn_number(), 'black', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
+                    if self.check_three_in_a_row(board, new_board, 'white'):
+                        new_board = self.minimax_remove(new_board, 'white')
+    
+                    value = min(value, self.minimax(depth-1, 'black', False, new_board,a,b, board))
+                    if(first):
+                        new_board.set_value(value)
+                        self._all_first_boards.append(new_board)
+                    if value <= a:
+                        break
+                    b = min(b,value)
                 return value
             else:
                 all_states = self.all_possible_states_for_move(board.get_lines(), 'white')
@@ -201,12 +249,13 @@ class Engine(object):
                         new_board = self.minimax_remove(new_board, 'white')
     
                     value = min(value, self.minimax(depth-1, 'black', False, new_board,a,b, board))
-                    if value <= a:
-                        break
-                    b = min(b,value)
                     if(first):
                         new_board.set_value(value)
                         self._all_first_boards.append(new_board)
+                    if value <= a:
+                        break
+                    b = min(b,value)
+
                 return value
         if max_player == 'black':
             value = float('-inf')
@@ -218,12 +267,29 @@ class Engine(object):
                         new_board = self.minimax_remove(new_board, 'black')
 
                     value = max(value, self.minimax(depth-1, 'white', False, new_board,a,b, board))
-                    if value >= b:
-                        break
-                    a = max(a,value)
                     if(first):
                         new_board.set_value(value)
                         self._all_first_boards.append(new_board)
+                    if value >= b:
+                        break
+                    a = max(a,value)
+
+                return value
+            elif board.get_black_pieces_left() == 3:
+                all_states = self.all_possible_states_for_jump(board.get_lines(), 'black')
+                for lines in all_states:
+                    new_board = Board(board.get_difficulty(), board.get_turn_number(), 'white', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left(),board.get_board_size(),lines)
+                    if self.check_three_in_a_row(board, new_board, 'black'):
+                        new_board = self.minimax_remove(new_board, 'black')
+    
+                    value = max(value, self.minimax(depth-1, 'white', False, new_board,a,b, board))
+                    if(first):
+                        new_board.set_value(value)
+                        self._all_first_boards.append(new_board)
+                    if value >= b:
+                        break
+                    a = max(a, value)
+
                 return value
             else:
                 all_states = self.all_possible_states_for_move(board.get_lines(), 'black')
@@ -234,12 +300,12 @@ class Engine(object):
                         new_board = self.minimax_remove(new_board, 'black')
 
                     value = max(value, self.minimax(depth-1, 'white', False, new_board,a,b, board))
-                    if value >= b:
-                        break
-                    a = max(a, value)
                     if(first):
                         new_board.set_value(value)
                         self._all_first_boards.append(new_board)
+                    if value >= b:
+                        break
+                    a = max(a, value)
                 return value
     """
     Arguments: a board, player color
@@ -256,13 +322,13 @@ class Engine(object):
         for lines in all_states:
             if max_player == 'white':
                 new_board = Board(board.get_difficulty(),board.get_turn_number(), 'black', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left(),board.get_black_pieces_left()-1,board.get_board_size(),lines)
-                new_value = heur.secondPhaseState(new_board,board,'white')
+                new_value = heur.secondPhaseState(new_board,board)
                 if new_value < value:
                     value = new_value
                     best_board = new_board
             else:
                 new_board = Board(board.get_difficulty(), board.get_turn_number(),'white', board.get_white_pieces_hand(), board.get_black_pieces_hand(), board.get_white_pieces_left()-1,board.get_black_pieces_left(),board.get_board_size(),lines)
-                new_value = heur.secondPhaseState(new_board, board, 'black')
+                new_value = heur.secondPhaseState(new_board, board)
                 if new_value > value:
                     value = new_value
                     best_board = new_board
@@ -275,8 +341,7 @@ class Engine(object):
     """
     def get_best_board(self,player):
         if not self._all_first_boards:
-            print("Found no moves")
-            sys.exit()
+            return False
         best_board = self._all_first_boards[0]
         for board in self._all_first_boards:
             if player == 'white':
@@ -288,7 +353,6 @@ class Engine(object):
                     best_board = board
         self._all_first_boards = []
         best_board.increase_turn_number()
-        print("best", best_board.get_value())
         return best_board
 
     """
@@ -296,27 +360,38 @@ class Engine(object):
     note: this is expecting the game state to only have the most recent move added.
 
     """
-    def check_three_in_a_row(self, previousBoard, currentBoard, current_player_color):
-        if not previousBoard: return 0
-        for xIndex, line in enumerate(previousBoard.get_lines()):
-            for yIndex, item in enumerate(line):
-                 if item['owner'] != currentBoard.get_lines()[xIndex][yIndex]['owner']:
-                     if self.three_in_row(currentBoard, item['xy'], current_player_color):
+    def check_three_in_a_row(self, previous_board, current_board, current_player_color):
+        if not previous_board: return 0
+        for x_index, line in enumerate(previous_board.get_lines()):
+            for y_index, item in enumerate(line):
+                 if item['owner'] != current_board.get_lines()[x_index][y_index]['owner']:
+                     if self.three_in_row(current_board.get_lines(), item['xy'], current_player_color):
                          return 1
         return 0
  
         
-    def three_in_row(self, board, position, current_player_color):
-        for line in board.get_lines():
-            numinrow = 0
-            hasPosition = 0
-            for item in line:
-                if ( current_player_color == item["owner"]):
-                    numinrow +=1
-                if (position == item['xy']):
-                    hasPosition = 1
-                if ((hasPosition == 1) and (numinrow == 3)):
+    def three_in_row(self, lines, position, current_player_color, for_remove = False):
+        for line in lines:
+            num_in_row = 0
+            has_position = 0
+            already_three = False
+            for index, item in enumerate(line):
+                if (current_player_color == item["owner"]) and already_three:
+                    return 0
+                elif already_three:
                     return 1
+                elif current_player_color == item['owner']:
+                    num_in_row += 1
+                else:
+                    has_position = 0
+                if (position == item['xy'] and item['owner'] == current_player_color):
+                    has_position = 1
+             
+                if ((has_position == 1) and (num_in_row == 3)):
+                    already_three = True
+                    if index == len(line)-1: return 1
+                    if for_remove: return 1
+
         return 0
     
 
@@ -324,23 +399,38 @@ class Engine(object):
         depth = 2
         player = board.get_player_turn()
         self.minimax(depth, player, True, board, float('-inf'),float('inf'))
-        board = self.get_best_board(player)
-        return board
-
+        board_new = self.get_best_board(player)
+        if not board_new:
+            board.increase_turn_number()
+            if player == 'white': board.set_player_turn('black')
+            else: board.set_player_turn('white')
+            return board
+        return board_new
 
     def medium_mode(self, board):
         depth = 4
         player = board.get_player_turn()
         self.minimax(depth, player, True, board, float('-inf'),float('inf'))
-        board = self.get_best_board(player)
-        return board
+        board_new = self.get_best_board(player)
+        if not board_new:
+            board.increase_turn_number()
+            if player == 'white': board.set_player_turn('black')
+            else: board.set_player_turn('white')
+            return board
+        return board_new
     
     def hard_mode(self, board):
         depth = 6
         player = board.get_player_turn()
         self.minimax(depth, player, True, board, float('-inf'),float('inf'))
-        board = self.get_best_board(player)
-        return board
+        board_new = self.get_best_board(player)
+        if not board_new:
+            board.increase_turn_number()
+            if player == 'white': board.set_player_turn('black')
+            else: board.set_player_turn('white')
+            return board
+            
+        return board_new
     
 def main():
     r = Reader()
