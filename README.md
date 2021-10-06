@@ -9,6 +9,7 @@ Robert Paananen
 Samet Burak Türk  
 Subhang Vempati  
 Laurent Vouriot  
+The original component developed by this group was the game engine. The group has also developed their own game platform and uses group C's communication platform.
 ### How-to-use: Engine
 The engine can be run from the terminal by standing in the src directory and running the command `python3 game_engine.py`.
 This will result in the engine reading the current state of the game in the file called board.json and writing the new game state to the file result.json. 
