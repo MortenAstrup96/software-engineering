@@ -1,7 +1,6 @@
 from board import Board
 from reader import Reader
 from heuristic import Heuristic
-from game_platform import Game_Platform
 import cProfile
 import copy
 import os
@@ -441,7 +440,7 @@ class Engine(object):
 def main():
     r = Reader()
     try:
-        file_name = "board.json"
+        file_name = "group_l_board.json"
         r.read(file_name)
         board = r.board
         diff = board.get_difficulty()

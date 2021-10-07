@@ -8,7 +8,6 @@ import reader as file_reader
 import board as game_board
 from game_engine import Engine
 from heuristic import Heuristic
-from game_platform_demo import Game_Platform
 class TestEngine(unittest.TestCase):
     def test_engine_move(self):
         """
