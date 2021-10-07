@@ -12,6 +12,7 @@ Laurent VOURIOT
 
 """
 
+from engine_exceptions import *
 
 class Board(object):
     """
@@ -22,7 +23,7 @@ class Board(object):
     def __init__(self, difficulty, turn_number, player_turn, white_pieces_in_hand,
                  black_pieces_in_hand, white_pieces_left, black_pieces_left,
                  board_size, lines):
-        """se
+        """
         constructor
         
         # TODO discuss about the representation of difficulty
@@ -47,6 +48,9 @@ class Board(object):
         self._board_size = board_size
         self._lines = lines
         self._value = 0
+
+        if(self._turn_number > 200):
+            raise Max_round_error
 
 
 
