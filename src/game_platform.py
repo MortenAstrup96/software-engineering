@@ -2,6 +2,7 @@ import os
 import copy
 from board import Board
 from reader import Reader
+from game_engine import Engine
 import sys
 class Game_Platform(object):
     HEADER = '\033[95m'
@@ -13,8 +14,9 @@ class Game_Platform(object):
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+    
     def __init__(self):
-        pass
+        self.no_move = False
 
     def check_three_in_a_row(self, previousBoard, currentBoard, current_player_color):
         if not previousBoard: return 0
@@ -172,10 +174,10 @@ class Game_Platform(object):
               " |  /            |            \  |" + f"       Turn: {board.get_turn_number()}\n"\
               " | /             |             \ |" + f"       White left: {board.get_white_pieces_left()}  Black left: {board.get_black_pieces_left()} \n"\
               "["+V+"]—————————————["+W+"]—————————————["+X+"]"+ f"      White hand: {board.get_white_pieces_hand()}  Black hand: {board.get_black_pieces_hand()} \n"
-             
-              
         print(str)
-
+        if self.no_move:
+            print("No moves found, skipping turn.")
+            self.no_move = False
 
     def ask_place(self,board,player):
         move = ""
@@ -219,6 +221,9 @@ class Game_Platform(object):
         move = ""
         valid = False
         invalid_text = False
+        e = Engine()
+        if not e.all_possible_states_for_move(board.get_lines(),player):
+            return False
         while not valid:
             move_start = ""
             move_end = ""
@@ -235,7 +240,8 @@ class Game_Platform(object):
             if not valid: invalid_text = True
         board.set_lines(valid)
         self.print_board(board)
-        
+        return True
+    
     def place_piece(self, position, player_color, board):
         lines = board.get_lines()
         lines_before = copy.deepcopy(lines)
@@ -289,9 +295,10 @@ class Game_Platform(object):
             previous_board = copy.deepcopy(board)
             if board.get_player_pieces_in_hand(player) > 0:
                 self.ask_place(board, player)
-            else:
-                self.ask_move(board, player)
                 
+            else:
+                if not self.ask_move(board, player):
+                    self.no_move = True
             if(self.check_three_in_a_row(previous_board, board, player)):
                 self.ask_remove(board,player)
             board.increase_turn_number()

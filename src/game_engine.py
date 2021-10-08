@@ -1,7 +1,7 @@
 from board import Board
 from reader import Reader
 from heuristic import Heuristic
-from game_platform import Game_Platform
+#from game_platform import Game_Platform
 import cProfile
 import copy
 import os
