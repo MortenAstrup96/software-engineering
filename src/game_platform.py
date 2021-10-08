@@ -14,7 +14,10 @@ class Game_Platform(object):
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-    
+    NOTIFICATION = ''
+    SURRENDERED = False
+    SURRENDERED_PLAYER = ''
+
     def __init__(self):
         self.no_move = False
 
@@ -26,8 +29,8 @@ class Game_Platform(object):
                      if self.three_in_row(currentBoard.get_lines(), item['xy'], current_player_color):
                          return 1
         return 0
- 
-        
+
+
     def three_in_row(self, lines, position, current_player_color, for_remove = False):
         for line in lines:
             num_in_row = 0
@@ -44,12 +47,12 @@ class Game_Platform(object):
                     has_position = 0
                 if (position == item['xy'] and item['owner'] == current_player_color):
                     has_position = 1
-             
+
                 if ((has_position == 1) and (num_in_row == 3)):
                     already_three = True
                     if index == len(line)-1: return 1
                     if for_remove: return 1
-                    
+
                 if has_position and num_in_row > 3 and for_remove:
                     return 1
         return 0
@@ -110,7 +113,7 @@ class Game_Platform(object):
         return ret
 
 
-    
+
     def print_board(self, board):
         os.system('clear')
         letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X"]
@@ -121,7 +124,7 @@ class Game_Platform(object):
                 if item['xy'] == [1,1]: A = item['owner']
                 if item['xy'] == [4,1]: B = item['owner']
                 if item['xy'] == [7,1]: C = item['owner']
-                
+
                 if item['xy'] == [2,2]: D = item['owner']
                 if item['xy'] == [4,2]: E = item['owner']
                 if item['xy'] == [6,2]: F = item['owner']
@@ -169,7 +172,7 @@ class Game_Platform(object):
               " |    |    |           |    |    |\n"\
               " |    |   ["+P+"]———["+Q+"]———["+R+"]   |    |\n"\
               " |    |  /       |       \  |    |\n"\
-              " |    | /        |        \ |    |\n"\
+              " |    | /        |        \ |    |" + f"      {self.NOTIFICATION}\n"\
               " |   ["+S+"]————————["+T+"]————————["+U+"]   |\n"\
               " |  /            |            \  |" + f"       Turn: {board.get_turn_number()}\n"\
               " | /             |             \ |" + f"       White left: {board.get_white_pieces_left()}  Black left: {board.get_black_pieces_left()} \n"\
@@ -189,7 +192,10 @@ class Game_Platform(object):
                 self.print_board(board)
                 print(player.capitalize() + "'s turn")
                 if invalid_text: print("\033[0;31mInvalid move\033[0;0m")
-                move = input("Place: ")
+
+                move = input("Type 'Surrender' or move location: ")
+                if move == "Surrender" and self.surrender(board):
+                    return False
                 move = self.translate_move(move)
             valid = self.place_piece(move,player,board)
             if not valid: invalid_text = True
@@ -201,14 +207,16 @@ class Game_Platform(object):
         remove = ""
         valid = False
         invalid_text = False
-        
+
         while not valid:
             remove = ""
             while not remove:
                 self.print_board(board)
                 print(player.capitalize() + "'s turn")
                 if invalid_text:  print("\033[0;31mInvalid move\033[0;0m")
-                remove = input("Remove: ")
+                remove = input("Type Surrender or choose location to remove: ")
+                if remove == "Surrender" and self.surrender(board):
+                    return False
                 remove = self.translate_move(remove)
             valid = self.remove_piece(remove, player, board)
             if not valid: invalid_text = True
@@ -232,8 +240,13 @@ class Game_Platform(object):
                 except:pass
                 print(player.capitalize() + "'s turn")
                 if invalid_text:  print("\033[0;31mInvalid move\033[0;0m")
+                print("Choose location or type 'Surrender'")
                 move_start = input("Move start: ")
+                if move_start == "Surrender" and self.surrender(board):
+                    return False
                 move_end = input("Move   end: ")
+                if move_end == "Surrender" and self.surrender(board):
+                    return False
                 move_start = self.translate_move(move_start)
                 move_end = self.translate_move(move_end)
             valid = self.move_piece(move_start, move_end, player, board.get_lines())
@@ -241,7 +254,7 @@ class Game_Platform(object):
         board.set_lines(valid)
         self.print_board(board)
         return True
-    
+
     def place_piece(self, position, player_color, board):
         lines = board.get_lines()
         lines_before = copy.deepcopy(lines)
@@ -249,7 +262,7 @@ class Game_Platform(object):
             for item in line:
                 if item['xy'] == position and item['owner'] == 'none':
                     item['owner'] = player_color
-                    
+
         return not lines == lines_before
 
     def remove_piece(self, position, player_color, board):
@@ -265,7 +278,7 @@ class Game_Platform(object):
                 if item['owner'] == other_player_color and not self.three_in_row(lines,item['xy'],other_player_color,True):
                     available_to_remove = True
                     break
-        
+
         for line in lines:
             for item in line:
                 if available_to_remove and item['xy'] == position and item['owner'] == other_player_color and not self.three_in_row(lines,position,other_player_color,True):
@@ -273,8 +286,8 @@ class Game_Platform(object):
                 elif not available_to_remove and item['xy'] == position and item['owner'] == other_player_color:
                     item['owner'] = 'none'
         return not lines == lines_before
-        
-        
+
+
     def game_start(self):
         os.system('clear')
         print("Welcome to the UU-Game!")
@@ -291,30 +304,58 @@ class Game_Platform(object):
         reader.read('board.json')
         board = reader.board
         player = 'white'
+
+        self.NOTIFICATION = ""
+        self.SURRENDERED = False
+        self.SURRENDERED_PLAYER = ""
+
         while board.get_black_pieces_left() > 0 and board.get_white_pieces_left() > 0 and board.get_turn_number() <= 200:
+            if self.SURRENDERED:
+                break
+
             previous_board = copy.deepcopy(board)
             if board.get_player_pieces_in_hand(player) > 0:
                 self.ask_place(board, player)
-                
+
             else:
                 if not self.ask_move(board, player):
                     self.no_move = True
+            if self.SURRENDERED:
+                break
+
             if(self.check_three_in_a_row(previous_board, board, player)):
                 self.ask_remove(board,player)
             board.increase_turn_number()
             if player == 'white': player = 'black'
             else: player = 'white'
 
-        gp.print_board(board)
-        if board.get_black_pieces_left() < 3: print("White won")
-        elif board.get_black_pieces_left() < 3: print("Black won")
+        self.print_board(board)
+        if self.SURRENDERED_PLAYER == 'black' or  board.get_black_pieces_left() < 3: print("White won")
+        elif self.SURRENDERED_PLAYER == 'white' or board.get_black_pieces_left() < 3: print("Black won")
         else: print("It's a draw")
 
+    def surrender(self, board):
+        answer = input("Are you sure you want to surrender (y/n)?")
+        if answer == 'y':
+            self.SURRENDERED = True
+            if board.get_player_turn() == 'black':
+                #board.set_black_pieces_left(0)
+                #board.set_black_pieces_in_hand(0)
+                self.NOTIFICATION = "White won. Black surrendered"
+                self.SURRENDERED_PLAYER = 'black'
+            if board.get_player_turn() == 'white':
+                #board.set_white_pieces_left(0)
+                #board.set_white_pieces_in_hand(0)
+                self.NOTIFICATION = "Black won. White surrendered"
+                self.SURRENDERED_PLAYER = 'white'
+            return True
+
+        return False
 
 
 def main():
     gp = Game_Platform()
     gp.game_start()
-    
+
 if __name__ == "__main__":
     main()
