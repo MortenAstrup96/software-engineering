@@ -39,7 +39,7 @@ class test_board(unittest.TestCase):
         test if an error is raised when the max turn number is reached
         excpected out come : max_turn_error is caught
         """
-        with self.assertRaises(Max_round_error):
+        with self.assertRaises(Max_Round_Error):
             board = Board("low",201,"black",12,12,12,12,24,[
             [{"xy":[1,1], "owner": "black"},{"xy":[1,2], "owner":"white"},{"xy":[1,3], "owner":"none"}],
             [{"xy":[1,1], "owner": "black"},{"xy":[2,1], "owner":"none"},{"xy": [3,1], "owner": "none"}]])

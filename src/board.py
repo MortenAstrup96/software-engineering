@@ -50,7 +50,7 @@ class Board(object):
         self._value = 0
 
         if(self._turn_number > 200):
-            raise Max_round_error
+            raise Max_Round_Error
 
 
 
