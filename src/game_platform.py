@@ -21,21 +21,34 @@ class Game_Platform(object):
         for xIndex, line in enumerate(previousBoard.get_lines()):
             for yIndex, item in enumerate(line):
                  if item['owner'] != currentBoard.get_lines()[xIndex][yIndex]['owner']:
-                     if self.three_in_row(currentBoard, item['xy'], current_player_color):
+                     if self.three_in_row(currentBoard.get_lines(), item['xy'], current_player_color):
                          return 1
         return 0
  
         
-    def three_in_row(self, board, position, current_player_color):
-        for line in board.get_lines():
-            numinrow = 0
-            hasPosition = 0
-            for item in line:
-                if ( current_player_color == item["owner"]):
-                    numinrow +=1
-                if (position == item['xy']):
-                    hasPosition = 1
-                if ((hasPosition == 1) and (numinrow == 3)):
+    def three_in_row(self, lines, position, current_player_color, for_remove = False):
+        for line in lines:
+            num_in_row = 0
+            has_position = 0
+            already_three = False
+            for index, item in enumerate(line):
+                if (current_player_color == item["owner"]) and already_three:
+                    return 0
+                elif already_three:
+                    return 1
+                elif current_player_color == item['owner']:
+                    num_in_row += 1
+                else:
+                    has_position = 0
+                if (position == item['xy'] and item['owner'] == current_player_color):
+                    has_position = 1
+             
+                if ((has_position == 1) and (num_in_row == 3)):
+                    already_three = True
+                    if index == len(line)-1: return 1
+                    if for_remove: return 1
+                    
+                if has_position and num_in_row > 3 and for_remove:
                     return 1
         return 0
 
@@ -236,11 +249,23 @@ class Game_Platform(object):
     def remove_piece(self, position, player_color, board):
         lines = board.get_lines()
         lines_before = copy.deepcopy(lines)
+        other_player_color = ""
+        if player_color == 'white': other_player_color = 'black'
+        else: other_player_color = 'white'
+        available_to_remove = False
+
         for line in lines:
             for item in line:
-                if item['xy'] == position and item['owner'] != player_color and item['owner'] != 'none':
+                if item['owner'] == other_player_color and not self.three_in_row(lines,item['xy'],other_player_color,True):
+                    available_to_remove = True
+                    break
+        
+        for line in lines:
+            for item in line:
+                if available_to_remove and item['xy'] == position and item['owner'] == other_player_color and not self.three_in_row(lines,position,other_player_color,True):
                     item['owner'] = 'none'
-    
+                elif not available_to_remove and item['xy'] == position and item['owner'] == other_player_color:
+                    item['owner'] = 'none'
         return not lines == lines_before
         
         

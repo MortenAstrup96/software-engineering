@@ -12,7 +12,7 @@ Laurent VOURIOT
 
 """
 
-from engine_exceptions import *
+from engine_errors import *
 
 class Board(object):
     """
