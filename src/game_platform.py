@@ -1,5 +1,8 @@
 import os
 import copy
+import server
+import client
+#from server.server.py import CommunicationServer
 from board import Board
 from reader import Reader
 from game_engine import Engine
@@ -295,9 +298,23 @@ class Game_Platform(object):
         while True:
             mode = input("Mode: ")
             if mode == 'x': sys.exit()
-            if mode == '1': pass
-            if mode == '2': pass
+            if mode == '1': self.start_server()
+            if mode == '2': self.join_server()
             if mode == '3': self.play_local()
+
+    def start_server(self):
+        communication_server = server.CommunicationServer()
+        communication_server.CreateServer()
+
+
+    def join_server(self):
+        player = client.Player()
+
+        ip = '127.0.0.1'#input("enter the servers ip address: ") #'127.0.0.1'
+
+        port = 3000 #input("enter port: ") # 5000
+
+        player.ConnectToServer(ip, port)
 
     def play_local(self):
         reader = Reader()

@@ -5,7 +5,7 @@ from socketio.client import Client
 from socketio.server import Server
 
 import server, client
-from server import Client as cs_client 
+from server import Client as cs_client
 
 ##### Variables and global Server object #####
 HOST = '127.0.0.1'
@@ -152,7 +152,7 @@ def test_Tournament_logic(ClientInstances, NoClients):
   assert client0_playerinfo.GamesLeft == 6
   assert client0_playerinfo.GamesPlayed == 1
   assert client0_playerinfo.NumberOfWins == 1
-  
+
 
   #Check that game concluded and moved to ConcludedGames
   assert len(SERVER.ActiveGames) == 3
@@ -201,7 +201,7 @@ def test_Tournament_logic(ClientInstances, NoClients):
 @pytest.mark.parametrize('NoClients', [8])
 def test_ClientMessaging(ClientInstances, NoClients):
     clean_server()
-    
+
     Client_1 = ClientInstances[0]
     Client_2 = ClientInstances[1]
 
@@ -248,7 +248,7 @@ def test_ClientMessaging(ClientInstances, NoClients):
     data_2 = Client_2.GetMessageFromOpponent(blocking = False)
     assert len(data_1) == 0
     assert len(data_2) == 0
-    
+
     # Test sending more messages
     msg_1 = {'msg_1':'packet_1'}
     msg_2 = {'msg_2':-1}
@@ -268,7 +268,7 @@ def test_ClientMessaging(ClientInstances, NoClients):
     print(data_1)
     print('Data in Client 2: ')
     print(data_2)
-    
+
     assert len(data_1) == 3
     assert len(data_2) == 2
     assert len(Client_1.MessageQue) == 0
@@ -279,13 +279,13 @@ def test_ClientMessaging(ClientInstances, NoClients):
     assert data_1[2]['data']['msg_3'] == 0.5
     assert data_2[0]['data']['msg_1'] == 'packet_1'
     assert data_2[1]['data']['msg_2'] == -1
-    
+
     # Test many messages in quick succession
     for i in range(20):
         Client_2.SendInformationToOpponent({'packet':i})
 
     time.sleep(1)
-    
+
     timeout = time.time() + 30
     data_1 = Client_1.GetMessageFromOpponent(blocking = True, timeout = 60)
     assert time.time() < timeout
@@ -320,20 +320,20 @@ def test_ClientMessaging(ClientInstances, NoClients):
     # Get messsages from clients, not blocking
     data_3 = Client_3.GetMessageFromOpponent(blocking = False)
     data_4 = Client_4.GetMessageFromOpponent(blocking = False)
-    
+
     print('Data Recieved by client 3: ')
     print(data_3)
     print('Data Recieved by client 4: ')
     print(data_4)
-    
+
     assert len(data_3) == 1
     assert len(data_4) == 1
     assert data_3[0]['data']['message'] == 0
     assert data_4[0]['data']['message'] == 0
-    
+
     for client in ClientInstances:
         client.Disconnect()
-    
+
 # Test Client Connections and Server Capacity
 @pytest.mark.parametrize('NoClients', [16])
 def test_ClientConnect(ClientInstances, NoClients):
@@ -398,3 +398,9 @@ def test_ClientConnect(ClientInstances, NoClients):
         client.Disconnect()
     # Final Sleep to allow disconnections to finalize
     time.sleep(0.1)
+
+
+def main():
+    test_ClientConnect(ClientInstances(8), [8])
+
+main()

@@ -65,7 +65,7 @@ class CommunicationServer():  # External
       self.TournamentGames.remove(game)
 
     return 0
-  
+
   def _concludeAIGame(self, game): #Randomizes a winner in the case that both players are AIs
     winner = random.randint(0, 1)
     if winner == 1:
@@ -244,14 +244,16 @@ class CommunicationServer():  # External
     self.sio.emit('gameover', {"code": 1, "winner": winner}, to=game.PlayerA.get_id())
     self.sio.emit('gameover', {"code": 1, "winner": winner}, to=game.PlayerB.get_id())
 
-    if len(self.ActiveGames) == 0 and len(self.TournamentGames) > 0: #there's an ongoing tournament, since a game is over we can try to start new games! 
+    if len(self.ActiveGames) == 0 and len(self.TournamentGames) > 0: #there's an ongoing tournament, since a game is over we can try to start new games!
       code = self.generateRound()
       if code == 0:
         logger.debug("Started a new Round, all games completed")
 
-  def CreateServer(self, ip = '127.0.0.1', port=5000):
+  def CreateServer(self, ip = '127.0.0.1', port=3000):
+
     # Create new thread with target _InternalCreateServer
     thread = threading.Thread(target=self._InternalCreateServer, args=[ip,port])
+
     # Set Process to daemon to destroy when main thread finishes
     thread.daemon = True
     thread.start()
@@ -381,7 +383,7 @@ class CommunicationServer():  # External
 
     if playerID == '':
       return -1
-    
+
     self.sio.emit('server_message', info, to=playerID)
     return 0
 
@@ -391,7 +393,7 @@ class Client:
     self.Name = None
     self.Ready = False
     self.PlayerInfo = PlayerInfo()
-    self.isAI = AI 
+    self.isAI = AI
     self.difficulty = difficulty
 
   def __str__(self):
@@ -418,7 +420,7 @@ class Client:
 
   def addGameLeft(self):
     self.PlayerInfo.addGameLeft()
-  
+
   def reset(self):
     self.Ready = False
     self.PlayerInfo.reset()

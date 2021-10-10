@@ -32,7 +32,7 @@ class Player:
 
     @self.sio.json_event(logging=True)
     def server_message(data):
-      pass #TODO when integrating handle server_message 
+      pass #TODO when integrating handle server_message
       #Call function here
 
     @self.sio.json_event(logging=True)
@@ -53,7 +53,7 @@ class Player:
     @self.sio.json_event(logging=True)
     def msg_from_opponent(data):
       self.MessageQue.append(data)
-   
+
     @self.sio.json_event(logging=True)
     def player_info(data):
       self.PlayerInfo = data
@@ -98,12 +98,14 @@ class Player:
     def waiting():
       logger.debug("Waiting for your next game.")
 
-  def ConnectToServer(self, ip='127.0.0.1', port=5000):
+  def ConnectToServer(self, ip, port):
     try:
+      print('try connect' + ip)
       self.sio.connect('http://' + ip+ ':' + str(port))
       logger.debug('Connected to ' + ip+ ':' +str(port))
       return 0
     except socketio.exceptions.ConnectionError as e:
+      print('could not connect')
       logger.debug('Failed to connect to server')
       return -1
 
