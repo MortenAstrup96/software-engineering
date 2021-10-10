@@ -121,8 +121,8 @@ class CommunicationServer():  # External
       logger.debug(f'msg_to_opponent: {data} from {sid}')
       #logger.debug('Clients: {}'.format(len(self.Clients)))
       #logger.debug(self.Clients[0])
-
-      if game := self.FindActiveGameBySid(sid):
+      game = self.FindActiveGameBySid(sid)
+      if game:
         if sid == game.PlayerA:
           opponent = game.PlayerB.get_id()
         else:
@@ -199,7 +199,8 @@ class CommunicationServer():  # External
 
     @self.sio.event
     def gameover(sid):
-      if game := self.FindActiveGameBySid(sid):
+      game = self.FindActiveGameBySid(sid)
+      if game:
         self.sio.emit('gameover', {"code": 0}, to=sid)
         self._concludeGame(game, winner=sid)
 

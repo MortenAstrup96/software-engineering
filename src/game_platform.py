@@ -314,8 +314,8 @@ class Game_Platform(object):
 
         port = 3000 #input("enter port: ") # 5000
 
-        player.ConnectToServer(ip, port)
-
+        print(player.ConnectToServer(ip, port))
+        
     def play_local(self):
         reader = Reader()
         reader.read('board.json')
