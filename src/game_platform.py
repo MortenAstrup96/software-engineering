@@ -312,6 +312,7 @@ class Game_Platform(object):
 
         ip = '127.0.0.1'#input("enter the servers ip address: ") #'127.0.0.1'
 
+        #Spruttigt
         port = 3000 #input("enter port: ") # 5000
 
         print(player.ConnectToServer(ip, port))
