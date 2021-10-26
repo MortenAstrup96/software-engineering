@@ -2,19 +2,19 @@
 from typing import Optional, TypeVar
 from flask import Flask
 import socketio
-import time
 import itertools
 import random
-import json
 import textwrap
-import socketio #Need this for exceptions
 from loggers import server_logger as logger
 from common import JsonServer as Server
 import threading
-
 #from socketio.server import Server
-
-
+from board import Board
+from reader import Reader
+from game_engine import Engine
+import client
+import time
+import sys
 # Object Created by developers to start a server that listen for clients to connect
 class CommunicationServer():  # External
   def __init__(self, maxConcurr=8):
@@ -27,14 +27,13 @@ class CommunicationServer():  # External
     self.ConcludedGames = []
     self.AICounter = 0
     self.TournamentMode = False
-
+    self.AIThreads = []
   # Generates the next round. i.e. moves as many games as
   # possible from TournamentGames to ActiveGames without overlap
   def generateRound(self):
-
     if len(self.ActiveGames) > 0:
       logger.debug('Error couldn\'t generate round - Round still in progress')
-      return -1
+      return -1 
 
     for t_game in self.TournamentGames:
       contains = False
@@ -43,16 +42,26 @@ class CommunicationServer():  # External
 
       if not contains: # start the game
         self.ActiveGames.append(t_game)
-        if not t_game.PlayerA.isAI:
-          self.sio.emit('game_info', {
-            'opponent': str(t_game.PlayerB.Name),
+        self.sio.emit('game_info', {
+            'opponent':
+            {'id': str(t_game.PlayerB.Name),
+              'color': 'black',
+              'none': 0,
+              'isAI': t_game.PlayerB.isAI,
+            },
+            'score': None,
             'AI': t_game.PlayerB.isAI,
             'difficulty': t_game.PlayerB.difficulty
           }, to=t_game.PlayerA.get_id())  # msg PlayerA that they are playing vs PlayerB
 
-        if not t_game.PlayerB.isAI:
-          self.sio.emit('game_info', {
-            'opponent': str(t_game.PlayerA.Name),
+        self.sio.emit('game_info', {
+            'opponent': 
+            {'id': str(t_game.PlayerA.Name),
+              'color': 'white',
+              'none': 0,
+             'isAI': t_game.PlayerA.isAI,
+            },
+            'score': None,
             'AI': t_game.PlayerA.isAI,
             'difficulty': t_game.PlayerA.difficulty
           }, to=t_game.PlayerB.get_id()) # vice-versa
@@ -61,28 +70,56 @@ class CommunicationServer():  # External
       if game.PlayerA.isAI and game.PlayerB.isAI:
         self._concludeAIGame(game)
         self.ConcludedGames.append(game)
-
+      
       self.TournamentGames.remove(game)
 
-    return 0
+    for client in self.Clients:
+      client.Ready = False
+      game = self.FindActiveGameBySid(client.get_id())
+      if not game:
+        self.sio.emit('game_info', {
+            'opponent':{
+              'id': 'none',
+              'none': 1
+            },
+            'score': None
+          }, to=client.get_id())
 
+    return 0
+  
   def _concludeAIGame(self, game): #Randomizes a winner in the case that both players are AIs
     winner = random.randint(0, 1)
     if winner == 1:
       game.ConcludeGame(winner = game.PlayerA.get_id())
     else:
       game.ConcludeGame(winner = game.PlayerB.get_id())
+    self.ActiveGames.remove(game)
+
+  def _concludePlayerGames(self, player):
+    idx = 0
+    while idx < len(self.TournamentGames):
+      t_game = self.TournamentGames[idx]
+      if t_game.PlayerA == player or t_game.PlayerB == player:
+        t_game.ConcludeGame(t_game.PlayerB if t_game.PlayerA == player else t_game.PlayerA)
+        self.ConcludedGames.append(t_game)
+        self.TournamentGames.remove(t_game)
+      else:
+        idx += 1
 
   #Fills TournamentGames with all matches for the tournament
   def generateTournament(self):
     if len(self.TournamentGames) != 0:
       logger.debug('ERROR: couldn\'t generate tournament')
       return -1
+    self.ConcludedGames = []
+    self.ActiveGames = []
+    self.TournamentGames = []
     combinations = list(itertools.combinations(self.Clients, 2))
 
     for combination in combinations:
       game = Game(PlayerA = combination[0], PlayerB= combination[1])
       self.TournamentGames.append(game)
+    self.TournamentMode= True
 
     return 0
 
@@ -98,8 +135,11 @@ class CommunicationServer():  # External
     def connect(sid, environ, auth):
       if len(self.Clients) >= self.MaxConcurrentClients:
         raise socketio.exceptions.ConnectionRefusedError('Server is full')
+      elif self.TournamentMode:
+        raise socketio.exceptions.ConnectionRefusedError('Tournament already started.')
       else:
         new_client = Client(sid)
+        new_client.Name = sid
         self.Clients.append(new_client)
         logger.debug('Clients connected: {}'.format(len(self.Clients))) # Ugly print
 
@@ -107,8 +147,9 @@ class CommunicationServer():  # External
     def disconnect(sid):
       self.__removeClientById(sid)
       game = self.FindActiveGameBySid(sid)
+      self._concludePlayerGames(sid)
       if game:
-        opponent = (game.PlayerA if game.PlayerA != sid else game.PlayerB).get_id()
+        opponent = (game.PlayerA if game.PlayerA != sid else game.PlayerB).Name
         self._concludeGame(game, winner=opponent)
       logger.debug('Clients connected: {}'.format(len(self.Clients)))
 
@@ -151,13 +192,21 @@ class CommunicationServer():  # External
       logger.debug(f'start_game_request: from {sid}')
       code = self.StartGame()
       self.sio.emit('start_game_request', {'code': str(code)}, to=sid)
-
+      
     @self.sio.event
     def set_name(sid, data):
       logger.debug(f'set_name: from {sid} data {data}')
       code, given_name = self.SetPlayerName(sid, data.strip('"'))
       self.sio.emit('set_name', {'code': str(code), 'given_name': given_name}, to=sid)
 
+    @self.sio.event
+    def set_ai(sid, diff):
+      for client in self.Clients:
+        if client.ID == sid:
+          client.isAI = True
+          client.difficulty = diff
+          client.Name = f"CPU {self.AICounter}"
+          self.AICounter += 1
     @self.sio.event
     def custom_disconnect(sid):
       logger.debug(f'custom_disconnect: from {sid}')
@@ -171,7 +220,7 @@ class CommunicationServer():  # External
           playerData = client.PlayerInfo
 
       if playerData is not None:
-        logger.debug('sending')
+        logger.debug(playerData.__dict__)
         self.sio.emit('player_info', data=playerData.__dict__, to=sid)
 
     @self.sio.event
@@ -192,28 +241,34 @@ class CommunicationServer():  # External
         if client.Ready:
           ready_counter += 1
 
-      if ready_counter == len(self.Clients): # everyone is ready
-        code = self.StartGame()
-      else:
-        logger.debug(f'Players Ready: {ready_counter}/{len(self.Clients)}, waiting for all.')
-
-    @self.sio.event
-    def gameover(sid):
-      game = self.FindActiveGameBySid(sid)
-      if game:
-        self.sio.emit('gameover', {"code": 0}, to=sid)
-        self._concludeGame(game, winner=sid)
-
+      
+      if ready_counter == self.MaxConcurrentClients: # everyone is ready
         if len(self.ActiveGames) == 0 and len(self.TournamentGames) == 0 and self.TournamentMode: # all games for the tournament are complete!
           logger.debug('The tournament is over.')
-          self.TournamentMode = False
 
           # announce to everyone in the tournament that the tournament is over
+          score = self.GetTournamentData()
           for client in self.Clients:
-            self.sio.emit('game_info', {"code": 1, "data": "The tournament is over."}, to=client.get_id())
-
+            self.sio.emit('game_info', {"code": 1, 'score': score,'opponent':{'id': 'none', 'none':1},'over': True}, to=client.get_id())
+          self.ResetTournament()
+          return
+        else:
+          code = self.StartGame()
       else:
-        self.sio.emit('gameover', {"code": -1}, to=sid)
+        logger.debug(f'Players Ready: {ready_counter}/{self.MaxConcurrentClients}, waiting for all.')
+
+    @self.sio.json_event(logging=True)
+    def gameover(sid, data):
+      game = self.FindActiveGameBySid(sid)
+      if game:
+        if data['winner'] == 2:
+          self._concludeGame(game, winner=game.PlayerA.Name)
+        elif data['winner'] == 1:
+          self._concludeGame(game, winner=game.PlayerB.Name)
+        else:
+          self._concludeGame(game, winner=sid)
+      else:
+        self.sio.emit('gameover', {"code": -1, 'winner': ''}, to=sid)
         logger.debug(f'ERROR: Event sent by inactive player `{sid}`.')
 
   def FindActiveGameBySid(self, sid: str) -> Optional[TypeVar("Game")]:
@@ -225,16 +280,16 @@ class CommunicationServer():  # External
   def GetNumPlayers(self):
     return len(self.Clients)
 
-  def AddAI(self, difficulty = 1):
+  def AddAI(self, difficulty = 'low'):
     if self.GetNumPlayers() >= self.MaxConcurrentClients:
       return -1
-
-    AI = Client(ID=str(self.AICounter), AI=True, difficulty=difficulty)
-    AI.Ready = True
-    self.AICounter += 1
-    self.Clients.append(AI)
-    return 0
-
+    thread = threading.Thread(target=self._AIPlay,args=[difficulty])
+    # Set Process to daemon to destroy when main thread finishes
+    thread.daemon = True
+    thread.start()
+    self.AIThreads.append(thread)
+    return thread
+  
   def _concludeGame(self, game, winner):
     game.ConcludeGame(winner=winner)
     self.ConcludedGames.append(game)
@@ -242,19 +297,20 @@ class CommunicationServer():  # External
     #Remove active game
     self.ActiveGames.remove(game)
 
-    self.sio.emit('gameover', {"code": 1, "winner": winner}, to=game.PlayerA.get_id())
-    self.sio.emit('gameover', {"code": 1, "winner": winner}, to=game.PlayerB.get_id())
+    self.sio.emit('gameover', {"code": 1, "winner": str(winner)}, to=game.PlayerA.get_id())
+    self.sio.emit('gameover', {"code": 1, "winner": str(winner)}, to=game.PlayerB.get_id())
+    score = self.GetTournamentData()
+    for client in self.Clients:
+      if self.TournamentMode: self.sio.emit('game_info', {"code": 1, 'score': score,'opponent':{'id': 'none', 'none':1}}, to=client.get_id())
+      else: self.sio.emit('game_info', {"code": 1, 'score': score,'opponent':{'id': 'none', 'none':1},'singleOver':True}, to=client.get_id())
+    #if len(self.ActiveGames) == 0 and len(self.TournamentGames) > 0: #there's an ongoing tournament, since a game is over we can try to start new games! 
+      #code = self.generateRound()
+      #if code == 0:
+        #logger.debug("Started a new Round, all games completed")
 
-    if len(self.ActiveGames) == 0 and len(self.TournamentGames) > 0: #there's an ongoing tournament, since a game is over we can try to start new games!
-      code = self.generateRound()
-      if code == 0:
-        logger.debug("Started a new Round, all games completed")
-
-  def CreateServer(self, ip = '127.0.0.1', port=3000):
-
+  def CreateServer(self, ip = '127.0.0.1', port=5000):
     # Create new thread with target _InternalCreateServer
     thread = threading.Thread(target=self._InternalCreateServer, args=[ip,port])
-
     # Set Process to daemon to destroy when main thread finishes
     thread.daemon = True
     thread.start()
@@ -265,9 +321,90 @@ class CommunicationServer():  # External
   def _InternalCreateServer(self,ip,port):
     self.app = Flask(__name__)
     self.app.wsgi_app = socketio.WSGIApp(self.sio, self.app.wsgi_app)
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
     self.__callbacks()
     self.app.run(ip, port)
 
+
+  def _AIPlay(self,diff):
+    AI = client.Player()
+    counter = 0
+    while True:
+      try:
+        if AI.ConnectToServer() == 0:
+          break
+      except:
+        if counter == 5:
+          return -1
+        counter += 1
+    AI.setAI(diff)
+    while True:
+      AI.Ready()
+      opponent = None
+      while not opponent:
+        #os.system('clear')
+        #print("Waiting for opponent")
+        opponent = AI.CurrentOpponent
+        time.sleep(1)
+      player_c = ""
+      if AI.tournamentOver or AI.singleGameOver:
+        AI.Disconnect()
+        sys.exit(0)
+      
+      if opponent['id'] == 'none':
+        continue
+      if opponent['isAI']:
+        AI.SignalVictory(2)
+        continue
+      
+      if opponent['color'] == 'black':
+        reader = Reader()
+        reader.read('board.json')
+        board = reader.board
+        board.set_difficulty(diff)
+        player_c = 'white'
+      else:
+        player_c = 'black'
+        data = AI.GetMessageFromOpponent(True, 300)[0]['data']
+        if data == 'white':
+          print('White surrendered, black wins!')
+          return
+        board = Board(data["difficulty"], data["turn_number"], data["player_turn"], 
+                      data["white_pieces_in_hand"], data["black_pieces_in_hand"], 
+                      data["white_pieces_left"], data["black_pieces_left"],
+                      data["board_size"], data["lines"])  
+      diff = board.get_difficulty()
+      e = Engine()
+      while board.get_black_pieces_left() > 2 and board.get_white_pieces_left() > 2 and board.get_turn_number() <= 200:
+        if diff == 'low':
+          board = e.easy_mode(board)
+        if diff == 'medium':
+          board = e.medium_mode(board)
+        if diff == 'high':
+          board = e.hard_mode(board)
+
+        AI.SendInformationToOpponent(board.get_json())
+        if board.get_black_pieces_left() < 3 or board.get_white_pieces_left() < 3:
+          break
+
+        data = AI.GetMessageFromOpponent(True, 300)[0]['data']
+        if data == 'white' or data == 'black':
+          break
+        board = Board(data["difficulty"], data["turn_number"], data["player_turn"], 
+                      data["white_pieces_in_hand"], data["black_pieces_in_hand"], 
+                      data["white_pieces_left"], data["black_pieces_left"],
+                      data["board_size"], data["lines"])
+      if board.get_black_pieces_left() < 3:
+        AI.SignalVictory(2)
+        AI.Disconnect()
+        sys.exit(0)
+      elif board.get_white_pieces_left() < 3:
+        AI.SignalVictory(1)
+        AI.Disconnect()
+        sys.exit(0)
+        
   def StartGame(self):
     if len(self.ActiveGames) != 0:
       logger.debug("Cannot start a new game, a game is already going on.")
@@ -278,30 +415,29 @@ class CommunicationServer():  # External
     if len(self.Clients) == 1:
       # only 1 player, start AI match
       logger.debug("Waiting for Player or AI")
-    if len(self.Clients) == 2:
+    if len(self.Clients) == 2 and not self.TournamentMode:
       # 2 players, match them up for a game
       game = Game(self.Clients[0], self.Clients[1])
       self.ActiveGames.append(game)
       logger.debug(game)
       logger.debug('Started Game: ' + str(game.PlayerA) + ' vs ' + str(game.PlayerB) + '.')
-      self.sio.emit('game_info', {
-          'data': f'you are now in a game vs {game.PlayerB}'
+      self.sio.emit('game_info', {'opponent':{'id': game.PlayerB.Name, 'none': 0, 'color':'black','isAI':game.PlayerB.isAI}
       }, to=game.PlayerA.get_id()) # msg PlayerA that they are playing vs PlayerB
-      self.sio.emit('game_info', {
-          'data': f'you are now in a game vs {game.PlayerA}'
+      self.sio.emit('game_info', {'opponent':{'id': game.PlayerA.Name, 'none': 0, 'color':'white','isAI':game.PlayerA.isAI}
       }, to=game.PlayerB.get_id()) # vice-versa
-
-
-    if len(self.Clients) > 2:
+     
+      
+    if len(self.Clients) > 2 or self.TournamentMode:
       # tournament
       logger.debug("------TOURNAMENT MODE------")
       if len(self.ActiveGames) != 0: # already exists ongoing games for some reason, error
         return -1
 
-      self.generateTournament() # generate all games to be played into self.TournamentGames
-      logger.debug("generated tournament :)")
-      if len(self.TournamentGames) <= 0:
-        return -1
+      if len(self.TournamentGames) == 0:
+        self.generateTournament() # generate all games to be played into self.TournamentGames
+        logger.debug('New Tournament has started')
+        if len(self.TournamentGames) <= 0:
+          return -1
 
       code = self.generateRound()
       if code == -1: #
@@ -327,8 +463,8 @@ class CommunicationServer():  # External
     self.ActiveGames = []
     self.ConcludedGames = []
     self.TournamentGames = []
-
-    players = [client for client in self.Clients if not client.isAI]
+    
+    players = [client for client in self.Clients]
     self.Clients = players
     for client in self.Clients:
       client.reset()
@@ -366,15 +502,16 @@ class CommunicationServer():  # External
 
     data = []
     for client in self.Clients:
-      client_data = {
-        'Name': client.Name,
-        'Wins': client.PlayerInfo.NumberOfWins,
-        'ID': client.ID,
-        'AI': client.isAI
-      }
+      client_data = (client.Name, client.PlayerInfo.NumberOfWins)
       data.append(client_data)
+    
+    data.sort(key = lambda x:x[1], reverse=True)
+    string = ''
 
-    return data
+    for row in data:
+      string = string + str(row[0]) + '\t' + str(row[1]) + '\n'
+
+    return string
 
   def SendToPlayer(self, name, info):
     playerID = ''
@@ -384,27 +521,27 @@ class CommunicationServer():  # External
 
     if playerID == '':
       return -1
-
+    
     self.sio.emit('server_message', info, to=playerID)
     return 0
 
 class Client:
-  def __init__(self, ID, AI = False, difficulty = 1):
+  def __init__(self, ID, AI = False, difficulty = 'low'):
     self.ID = ID
     self.Name = None
     self.Ready = False
     self.PlayerInfo = PlayerInfo()
-    self.isAI = AI
+    self.isAI = AI 
     self.difficulty = difficulty
 
   def __str__(self):
-    return f'[SID: {self.ID}]' # might want to add playerinfo here later on
+    return f'[Name: {self.Name}]' # might want to add playerinfo here later on
 
   def __eq__(self, other):
     if isinstance(other, Client):
       return self.ID == other.ID
     elif isinstance(other, str):
-      return self.ID == other
+      return self.ID == other or self.Name == other
     else:
       return self == other
 
@@ -421,7 +558,7 @@ class Client:
 
   def addGameLeft(self):
     self.PlayerInfo.addGameLeft()
-
+  
   def reset(self):
     self.Ready = False
     self.PlayerInfo.reset()
@@ -464,7 +601,6 @@ class Game:
     return textwrap.dedent(f'''\
         PlayerA: {self.PlayerA}
         PlayerB: {self.PlayerB}
-        Active: {self.Active}
         Winner: {self.Winner}
         ----------------------------\
     ''')
@@ -484,6 +620,9 @@ class Game:
     else:
       self.PlayerA.lose()
       self.PlayerB.win()
+
+    #print('Game Concluded:')
+    #print(self)
     return 0
 
   #TEST by hand for the tournament and round generation

@@ -3,11 +3,11 @@ import time
 import json
 import socketio #Need this for exceptions
 
-from server import PlayerInfo
+#from server import PlayerInfo
 from loggers import client_logger as logger
 from common import JsonClient as Client
 import socketio
-
+import sys
 # Method for sending a file to your opponent during a game.
 class Player:
   def __init__(self):
@@ -21,15 +21,18 @@ class Player:
     self.DisconnectReturn = None
     self.SetNameReturn = None
     self.sio = Client(logger=logger)
+    self.CurrentOpponent = None
     self.__callbacks()
-
+    self.inGame = False
+    self.scoreBoard= None
+    self.winner = ""
+    self.tournamentOver = False
+    self.singleGameOver = False
   def __callbacks(self):
-
     @self.sio.json_event(logging=True)
-    def game_reset(data):
-      pass #TODO when integrating Handle game reset
-      #Call function here
-
+    def game_reset():
+      #print("here")
+      pass
     @self.sio.json_event(logging=True)
     def server_message(data):
       pass #TODO when integrating handle server_message
@@ -37,12 +40,23 @@ class Player:
 
     @self.sio.json_event(logging=True)
     def game_info(data):
-      pass #TODO when integrating handle game info
+      self.CurrentOpponent = data['opponent']
+      self.scoreBoard = data.get('score')
+      self.tournamentOver = data.get('over')
+      self.singleGameOver = data.get('singleOver')
+      self.winner = ""
+      #print(data['score'])
+      #self.CurrentOpponent = {'id':data['opponentid'],'color':data['opponentcolor']}
+
+      #pass #TODO when integrating handle game info
       #Call function here
 
     @self.sio.json_event(logging=True)
     def gameover(data):
       self.SignalVictoryReturn = int(data['code'])
+      self.CurrentOpponent = None
+      self.winner = data['winner']
+      self.inGame = False
       #TODO can be extended for the Player not calling SignalVictory
       #Call function here
 
@@ -76,10 +90,6 @@ class Player:
       self.ReadyReturn = int(data['code'])
 
     @self.sio.json_event(logging=True)
-    def gameover(data):
-      self.SignalVictoryReturn = int(data['code'])
-
-    @self.sio.json_event(logging=True)
     def set_name(data):
       code = int(data["code"])
       self.SetNameReturn = code
@@ -98,15 +108,13 @@ class Player:
     def waiting():
       logger.debug("Waiting for your next game.")
 
-  def ConnectToServer(self, ip, port):
+  def ConnectToServer(self, ip='127.0.0.1', port=5000):
     try:
-      print('try connect' + ip)
       self.sio.connect('http://' + ip+ ':' + str(port))
       logger.debug('Connected to ' + ip+ ':' +str(port))
       return 0
-    except socketio.exceptions.ConnectionError as e:
-      print('could not connect')
-      logger.debug('Failed to connect to server')
+    except e:
+      logger.debug('Failed to connect to server', e)
       return -1
 
   def Disconnect(self):
@@ -143,9 +151,9 @@ class Player:
     self.ReadyReturn = None
     return ret
 
-  def SignalVictory(self):
+  def SignalVictory(self, winner=None):
     logger.debug("Game over")
-    self.sio.call('gameover')
+    self.sio.call('gameover', data={'winner': winner})
     ret = self.SignalVictoryReturn
     self.SignalVictoryReturn = None
     return ret
@@ -163,6 +171,10 @@ class Player:
     self.SetNameReturn = None
     return ret
 
+  def setAI(self, diff):
+    logger.debug("Set AI")
+    self.sio.call('set_ai', diff)
+    
   # Get Messages from Opponent
   # If Blocking, wait until there are messages available, specify timeout to break wait after timeout
   def GetMessageFromOpponent(self,blocking=False,timeout=None):

@@ -104,9 +104,28 @@ class Board(object):
     def get_player_pieces_in_hand(self, player):
         if player == 'white': return self._white_pieces_in_hand
         else: return self._black_pieces_in_hand
-    
+
+    def get_player_pieces_left(self, player):
+        if player == 'white': return self._white_pieces_left
+        else: return self._black_pieces_left
+    def get_json(self):
+        board_data = { 
+                "difficulty": self._difficulty,
+                "turn_number": self._turn_number,
+                "player_turn": self._player_turn,
+                "white_pieces_in_hand": self._white_pieces_in_hand,
+                "black_pieces_in_hand": self._black_pieces_in_hand,
+                "white_pieces_left": self._white_pieces_left,
+                "black_pieces_left": self._black_pieces_left,
+                "board_size": self._board_size,
+                "lines":  self._lines
+                }
+        return board_data
     # SETTERS
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def set_player_turn_opposite(self):
+        if self._player_turn == 'white': self._player_turn = 'black'
+        else: self._player_turn = 'white'
     def set_value(self, value):
         self._value = value
     def set_player_turn(self, player_turn):

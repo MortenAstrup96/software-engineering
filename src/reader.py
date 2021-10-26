@@ -69,7 +69,7 @@ class Reader(object):
             json.dump(board_data,json_file, indent=4,separators=(',', ': '))
         json_file.close()
     
-
+    
     @property
     def board(self):
         """

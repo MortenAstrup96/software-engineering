@@ -7,6 +7,8 @@ from board import Board
 from reader import Reader
 from game_engine import Engine
 import sys
+import time
+import json
 class Game_Platform(object):
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -20,10 +22,11 @@ class Game_Platform(object):
     NOTIFICATION = ''
     SURRENDERED = False
     SURRENDERED_PLAYER = ''
-
+    
     def __init__(self):
         self.no_move = False
-
+        self.player = None
+        self.opponent = None
     def check_three_in_a_row(self, previousBoard, currentBoard, current_player_color):
         if not previousBoard: return 0
         for xIndex, line in enumerate(previousBoard.get_lines()):
@@ -86,6 +89,29 @@ class Game_Platform(object):
 
         return lines
 
+    def jump_piece(self, start, end, player_color, lines = None):
+        if not lines: lines = self._board.get_lines()
+        start_x, start_y = start
+        end_x, end_y = end
+        starts = []
+        ends = []
+        for line in lines:
+            start_item = None
+            end_item = None
+            for item in line:
+                if item['xy'] == [start_x, start_y] and item['owner'] == player_color:
+                    starts.append(item)
+                if item['xy'] == [end_x, end_y] and item['owner'] == 'none':
+                    ends.append(item)
+        if starts and ends:
+            for item in starts:
+                item['owner'] = 'none'
+            for item in ends:
+                item['owner'] = player_color
+        else:
+            return False
+        return lines
+    
     def translate_move(self, move):
         move = move.upper()
         ret = None
@@ -120,7 +146,11 @@ class Game_Platform(object):
     def print_board(self, board):
         os.system('clear')
         letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X"]
-
+        name = 'black'
+        if board.get_player_turn == 'black': name = 'white'
+        if self.opponent: name = self.opponent['id']
+        player_info = {'GamesPlayed': 0, 'GamesLeft': 1, 'NumberOfWins': 0}
+        if self.player: player_info = self.player.GetPlayerInfo()
         lines = board.get_lines()
         for line in lines:
             for item in line:
@@ -172,11 +202,11 @@ class Game_Platform(object):
               " |    |    |           |    |    |"+ "       they can be moved along the lines. The first player\n"\
               "["+J+"]——["+K+"]——["+L+"]         ["+M+"]——["+N+"]——["+O+"]" + "      to get down to 2 pieces loses.\n"\
               " |    |    |           |    |    |\n"\
-              " |    |    |           |    |    |\n"\
-              " |    |   ["+P+"]———["+Q+"]———["+R+"]   |    |\n"\
-              " |    |  /       |       \  |    |\n"\
+              " |    |    |           |    |    |" + f"       Games played: {player_info['GamesPlayed']}\n"\
+              " |    |   ["+P+"]———["+Q+"]———["+R+"]   |    |" + f"       Games left: {player_info['GamesLeft']}\n"\
+              " |    |  /       |       \  |    |" + f"       Wins: {player_info['NumberOfWins']}\n"\
               " |    | /        |        \ |    |" + f"      {self.NOTIFICATION}\n"\
-              " |   ["+S+"]————————["+T+"]————————["+U+"]   |\n"\
+              " |   ["+S+"]————————["+T+"]————————["+U+"]   |" + f"       You are playing against {name}\n"\
               " |  /            |            \  |" + f"       Turn: {board.get_turn_number()}\n"\
               " | /             |             \ |" + f"       White left: {board.get_white_pieces_left()}  Black left: {board.get_black_pieces_left()} \n"\
               "["+V+"]—————————————["+W+"]—————————————["+X+"]"+ f"      White hand: {board.get_white_pieces_hand()}  Black hand: {board.get_black_pieces_hand()} \n"
@@ -258,6 +288,36 @@ class Game_Platform(object):
         self.print_board(board)
         return True
 
+
+    def ask_jump(self,board, player):
+        move = ""
+        valid = False
+        invalid_text = False
+        e = Engine()
+        while not valid:
+            move_start = ""
+            move_end = ""
+            while not move_start and not move_end:
+                try:self.print_board(board)
+                except:pass
+                print(player.capitalize() + "'s turn")
+                if invalid_text:  print("\033[0;31mInvalid move\033[0;0m")
+                print("Choose location or type 'Surrender'")
+                move_start = input("Move start: ")
+                if move_start == "Surrender" and self.surrender(board):
+                    return False
+                move_end = input("Move   end: ")
+                if move_end == "Surrender" and self.surrender(board):
+                    return False
+                move_start = self.translate_move(move_start)
+                move_end = self.translate_move(move_end)
+            valid = self.jump_piece(move_start, move_end, player, board.get_lines())
+            if not valid: invalid_text = True
+        board.set_lines(valid)
+        self.print_board(board)
+        return True
+
+    
     def place_piece(self, position, player_color, board):
         lines = board.get_lines()
         lines_before = copy.deepcopy(lines)
@@ -298,24 +358,161 @@ class Game_Platform(object):
         while True:
             mode = input("Mode: ")
             if mode == 'x': sys.exit()
-            if mode == '1': self.start_server()
-            if mode == '2': self.join_server()
+            if mode == '1':
+                self.start_server()
+            if mode == '2':
+                player = self.join_server()
+                self.play_tournament(player)
+                break
             if mode == '3': self.play_local()
 
     def start_server(self):
-        communication_server = server.CommunicationServer()
+        play_num = 0
+        ai_num = -1
+        diff = 0
+        while play_num not in range(2,9):
+            try: play_num = int(input("How many players (2-8): "))
+            except: pass
+            if play_num not in range(2,9): print("Try again")
+        
+        while ai_num not in range(0,play_num+1):
+            try: ai_num = int(input(f"How many AI (0-{play_num}): "))
+            except: pass
+            if ai_num not in range(0,play_num+1): print("Try again")
+        while ai_num > 0 and diff not in range(1,4):
+            print("1: low \n2: Medium \n3: High")
+            try: diff = int(input("What difficulty for AI? (1-3): "))
+            except: pass
+            if diff not in range(1,4): print("Try again")
+        if diff == 1: diff = 'low'
+        if diff == 2: diff = 'medium'
+        if diff == 3: diff = "high"
+        communication_server = server.CommunicationServer(play_num)
         communication_server.CreateServer()
+        for i in range(ai_num):
+            communication_server.AddAI(diff)
+            
+    def play_tournament(self, player):
+        name = input("Name: ")
+        player.SetName(name)
+        self.player = player
+        while True:
+            input("Press enter when ready! ")
+            player.Ready()
+            if player.tournamentOver:
+                print("Tournament over. Thank you for playing.")
+                print("Here are the final standings:")
+                print(player.scoreBoard)
+                player.Disconnect()
+                sys.exit(0)
+      
+            opponent = None
+            while not opponent:
+                os.system('clear')
+                print("Waiting for opponent")
+                opponent = player.CurrentOpponent
+                time.sleep(1)
+            while opponent['id'] == 'none':
+                os.system('clear')
+                print("Did not find opponent this round.")
+                print("Waiting for opponent")
+                opponent = player.CurrentOpponent
+                player.Ready()
+                if player.tournamentOver:
+                    print("Tournament over. Thank you for playing.")
+                    print("Here are the final standings:")
+                    print(player.scoreBoard)
+                    player.Disconnect()
+                    sys.exit(0)
+      
+                time.sleep(1)
+                
+            player_c = ""
+            self.opponent = opponent
+            if opponent['color'] == 'black':
+                reader = Reader()
+                reader.read('board.json')
+                board = reader.board
+                player_c = 'white'
+            else:
+                player_c = 'black'
+                data = player.GetMessageFromOpponent(True, 300)[0]['data']
+                if data == 'white':
+                    print('White surrendered, black wins!')
+                    print(player.scoreBoard)
+                    continue
+                board = Board(data["difficulty"], data["turn_number"], data["player_turn"], 
+                                data["white_pieces_in_hand"], data["black_pieces_in_hand"], 
+                                data["white_pieces_left"], data["black_pieces_left"],
+                                data["board_size"], data["lines"])
+                
+            self.NOTIFICATION = ""
+            self.SURRENDERED = False
+            self.SURRENDERED_PLAYER = ""
+            data = ""
+            while board.get_black_pieces_left() > 2 and board.get_white_pieces_left() > 2 and board.get_turn_number() <= 200:
+                    if self.SURRENDERED:
+                        break
 
+                    previous_board = copy.deepcopy(board)
+                    if board.get_player_pieces_in_hand(player_c) > 0:
+                        self.ask_place(board, player_c)
+                    elif board.get_player_pieces_left(player_c) == 3:
+                        self.ask_jump(board,player_c)
+                    else:
+                        if not self.ask_move(board, player_c):
+                            self.no_move = True
+                    if self.SURRENDERED:
+                        break
 
+                    if(self.check_three_in_a_row(previous_board, board, player_c)):
+                        self.ask_remove(board,player_c)
+                    board.increase_turn_number()
+                    board.set_player_turn_opposite()
+                    if board.get_black_pieces_left() < 3 or board.get_white_pieces_left() < 3:
+                        break
+                    player.SendInformationToOpponent(board.get_json())
+                    self.print_board(board)
+                    print("Waiting for opponent")
+                    data = player.GetMessageFromOpponent(True, 300)[0]['data']
+                    if data == 'white' or data == 'black':
+                        break
+                    board = Board(data["difficulty"], data["turn_number"], data["player_turn"], 
+                                data["white_pieces_in_hand"], data["black_pieces_in_hand"], 
+                                data["white_pieces_left"], data["black_pieces_left"],
+                                data["board_size"], data["lines"])
+                    self.print_board(board,player)
+
+            if data == 'white' or data == 'black':
+                print(data.capitalize(), "surrendered,",player_c,"wins!")
+                return 
+            if self.SURRENDERED_PLAYER == 'black' or board.get_black_pieces_left() < 3:
+                if player.singleGameOver: print("Game over! Thank you for playing")
+                print("White won")
+                if self.SURRENDERED: player.SendInformationToOpponent("black")
+                player.SignalVictory(2)
+            elif self.SURRENDERED_PLAYER == 'white' or board.get_white_pieces_left() < 3:
+                if player.singleGameOver: print("Game over! Thank you for playing")
+                print("Black won")
+                if self.SURRENDERED: player.SendInformationToOpponent("white")
+                player.SignalVictory(1)
+            else: print("It's a draw")
+            if player.scoreBoard != -1:
+                print(player.scoreBoard)
+            if player.singleGameOver:
+                player.Disconnect()
+                sys.exit(0)
     def join_server(self):
-        player = client.Player()
+        try:
+            player = client.Player()
 
-        ip = '127.0.0.1'#input("enter the servers ip address: ") #'127.0.0.1'
-
-        #Spruttigt
-        port = 3000 #input("enter port: ") # 5000
-
-        print(player.ConnectToServer(ip, port))
+            ip = '127.0.0.1'
+            port = 5000 
+        
+            player.ConnectToServer(ip, port)
+        except:
+            pass
+        return player
         
     def play_local(self):
         reader = Reader()
@@ -327,7 +524,7 @@ class Game_Platform(object):
         self.SURRENDERED = False
         self.SURRENDERED_PLAYER = ""
 
-        while board.get_black_pieces_left() > 0 and board.get_white_pieces_left() > 0 and board.get_turn_number() <= 200:
+        while board.get_black_pieces_left() > 2 and board.get_white_pieces_left() > 2 and board.get_turn_number() <= 200:
             if self.SURRENDERED:
                 break
 
@@ -335,6 +532,8 @@ class Game_Platform(object):
             if board.get_player_pieces_in_hand(player) > 0:
                 self.ask_place(board, player)
 
+            elif board.get_player_pieces_left(player) == 3:
+                self.ask_jump(board,player)
             else:
                 if not self.ask_move(board, player):
                     self.no_move = True
@@ -347,13 +546,13 @@ class Game_Platform(object):
             if player == 'white': player = 'black'
             else: player = 'white'
 
-        self.print_board(board)
+        self.print_board(board, )
         if self.SURRENDERED_PLAYER == 'black' or  board.get_black_pieces_left() < 3: print("White won")
         elif self.SURRENDERED_PLAYER == 'white' or board.get_black_pieces_left() < 3: print("Black won")
         else: print("It's a draw")
 
     def surrender(self, board):
-        answer = input("Are you sure you want to surrender (y/n)?")
+        answer = input("Are you sure you want to surrender (y/n)? ")
         if answer == 'y':
             self.SURRENDERED = True
             if board.get_player_turn() == 'black':

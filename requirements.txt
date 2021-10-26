@@ -1,6 +1,7 @@
 ###### Requirements without Version Specifiers ######
 Flask
-python-socketio
+python-socketio == 5.3.0
+requests
 
 # Testing
 pytest
