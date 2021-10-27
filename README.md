@@ -11,7 +11,9 @@ Subhang Vempati
 Laurent Vouriot  
 The original component developed by this group was the game engine. The group has also developed their own game platform and uses group C's communication platform.  
 The engine uses a minimax algorithm with alpha-beta pruning to find good moves. The heuristics functions are based on this blog: https://kartikkukreja.wordpress.com/2014/03/17/heuristicevaluation-function-for-nine-mens-morris/  
-  
+### Requirements
+This program requires python 3.9 to work properly.  
+Other requirements can be installed with `python3 -m pip -r requirements.txt`  
 ### How-to-use: Engine
 The engine can be run from the terminal by standing in the src directory and running the command `python3 game_engine.py`.
 This will result in the engine reading the current state of the game in the file called board.json and writing the new game state to the file result.json. 

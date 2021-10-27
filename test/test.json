@@ -1,7 +1,7 @@
 {
     "difficulty": "low",
     "turn_number": 0,
-    "player_turn": "White",
+    "player_turn": "white",
     "white_pieces_in_hand": 12,
     "black_pieces_in_hand": 12,
     "white_pieces_left": 12,

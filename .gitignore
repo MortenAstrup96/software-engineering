@@ -1,0 +1,66 @@
+
+src/__pycache__/reader.cpython-38.pyc
+src/__pycache__/heuristic.cpython-38.pyc
+src/__pycache__/game_engine.cpython-38.pyc
+src/__pycache__/board.cpython-38.pyc
+.spyproject/config/workspace.ini
+.spyproject/config/vcs.ini
+.spyproject/config/encoding.ini
+.spyproject/config/defaults/defaults-workspace-0.2.0.ini
+.spyproject/config/defaults/defaults-vcs-0.2.0.ini
+.spyproject/config/defaults/defaults-encoding-0.2.0.ini
+.spyproject/config/defaults/defaults-codestyle-0.2.0.ini
+.spyproject/config/codestyle.ini
+.spyproject/config/backups/workspace.ini.bak
+.spyproject/config/backups/vcs.ini.bak
+.spyproject/config/backups/encoding.ini.bak
+.spyproject/config/backups/codestyle.ini.bak
+.DS_Store
+*.pyc
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Org-mode
+.org-id-locations
+*_archive
+
+# flymake-mode
+*_flymake.*
+
+# eshell files
+/eshell/history
+/eshell/lastdir
+
+# elpa packages
+/elpa/
+
+# reftex files
+*.rel
+
+# AUCTeX auto folder
+/auto/
+
+# cask packages
+.cask/
+dist/
+
+# Flycheck
+flycheck_*.el
+
+# server auth directory
+/server/
+
+# projectiles files
+.projectile
+
+# directory configuration
+.dir-locals.el
+
+# network security
+/network-security.data
