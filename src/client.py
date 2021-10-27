@@ -113,8 +113,8 @@ class Player:
       self.sio.connect('http://' + ip+ ':' + str(port))
       logger.debug('Connected to ' + ip+ ':' +str(port))
       return 0
-    except e:
-      logger.debug('Failed to connect to server', e)
+    except:
+      logger.debug('Failed to connect to server')
       return -1
 
   def Disconnect(self):

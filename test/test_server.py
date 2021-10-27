@@ -1,9 +1,7 @@
-# Test Server / Client Communication
-
-import pytest, time, threading, socket
-from socketio.client import Client
-from socketio.server import Server
-
+import sys
+import os
+import pytest
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 import server, client
 from server import Client as cs_client
 
@@ -38,6 +36,7 @@ def clean_server():
   SERVER.ActiveGames = []
   SERVER.TournamentGames = []
   SERVER.ConcludedGames = []
+  SERVER.TournamentStarted = False
 
 
 ##### TESTS #####
@@ -191,8 +190,8 @@ def test_Tournament_logic(ClientInstances, NoClients):
   assert playerinfo['NumberOfWins'] == 2
 
   #Check if new round started when last game concluded
-  assert len(SERVER.TournamentGames) == 20
-  assert len(SERVER.ActiveGames) == 4
+  assert len(SERVER.TournamentGames) == 15 # requirements from Group D
+  assert len(SERVER.ActiveGames) == 3
 
   for client in ClientInstances:
         client.Disconnect()
@@ -201,7 +200,7 @@ def test_Tournament_logic(ClientInstances, NoClients):
 @pytest.mark.parametrize('NoClients', [8])
 def test_ClientMessaging(ClientInstances, NoClients):
     clean_server()
-
+    
     Client_1 = ClientInstances[0]
     Client_2 = ClientInstances[1]
 
@@ -248,7 +247,7 @@ def test_ClientMessaging(ClientInstances, NoClients):
     data_2 = Client_2.GetMessageFromOpponent(blocking = False)
     assert len(data_1) == 0
     assert len(data_2) == 0
-
+    
     # Test sending more messages
     msg_1 = {'msg_1':'packet_1'}
     msg_2 = {'msg_2':-1}
@@ -268,7 +267,7 @@ def test_ClientMessaging(ClientInstances, NoClients):
     print(data_1)
     print('Data in Client 2: ')
     print(data_2)
-
+    
     assert len(data_1) == 3
     assert len(data_2) == 2
     assert len(Client_1.MessageQue) == 0
@@ -279,58 +278,20 @@ def test_ClientMessaging(ClientInstances, NoClients):
     assert data_1[2]['data']['msg_3'] == 0.5
     assert data_2[0]['data']['msg_1'] == 'packet_1'
     assert data_2[1]['data']['msg_2'] == -1
-
+    
     # Test many messages in quick succession
     for i in range(20):
         Client_2.SendInformationToOpponent({'packet':i})
 
     time.sleep(1)
-
+    
     timeout = time.time() + 30
     data_1 = Client_1.GetMessageFromOpponent(blocking = True, timeout = 60)
     assert time.time() < timeout
 
     for i in range(20):
         assert data_1[i]['data']['packet'] == i
-
-    #### Add two more clients ####
-
-    Client_3 = ClientInstances[2]
-    Client_4 = ClientInstances[3]
-
-    GameState = {'Data':'Message','Error':None}
-    # Connect new clients to server
-    assert Client_3.ConnectToServer(HOST,PORT) == 0
-    assert Client_4.ConnectToServer(HOST,PORT) == 0
-    # Ready up new clients
-    Client_3.Ready()
-    Client_4.Ready()
-    time.sleep(2)
-    # Assert that server has 4 clients connected
-    assert len(SERVER.Clients) == 4
-    # Assert that new clients have no messages
-    assert len(Client_3.MessageQue) == 0
-    assert len(Client_4.MessageQue) == 0
-
-    # Send message from client 3 to client 4 and vice versa
-    msg = {'message':0}
-    Client_3.SendInformationToOpponent(msg)
-    Client_4.SendInformationToOpponent(msg)
-    time.sleep(1)
-    # Get messsages from clients, not blocking
-    data_3 = Client_3.GetMessageFromOpponent(blocking = False)
-    data_4 = Client_4.GetMessageFromOpponent(blocking = False)
-
-    print('Data Recieved by client 3: ')
-    print(data_3)
-    print('Data Recieved by client 4: ')
-    print(data_4)
-
-    assert len(data_3) == 1
-    assert len(data_4) == 1
-    assert data_3[0]['data']['message'] == 0
-    assert data_4[0]['data']['message'] == 0
-
+    
     for client in ClientInstances:
         client.Disconnect()
 
@@ -400,7 +361,28 @@ def test_ClientConnect(ClientInstances, NoClients):
     time.sleep(0.1)
 
 
-def main():
-    test_ClientConnect(ClientInstances(8), [8])
+@pytest.mark.parametrize('NoClients', [8])
+def test__concludePlayerGames(ClientInstances, NoClients):
+    clean_server()
+    order = [0, 3, 5, 2, 1, 4, 7, 6]
+    wins = dict(zip(order, range(len(order))))
+    for client in ClientInstances:
+        client.ConnectToServer(HOST, PORT)
+    clients = [client for client in SERVER.Clients]
+    SERVER.StartGame()
+    for idx in order:
+        ClientInstances[idx].Disconnect()
+    for idx, client in enumerate(clients):
+        assert client.PlayerInfo.GamesPlayed == len(order) - 1
+        assert client.PlayerInfo.NumberOfWins == wins[idx]
 
-main()
+
+@pytest.mark.parametrize('NoClients', [8])
+def test_join_server_after_tournament(ClientInstances, NoClients):
+    clean_server()
+    for client in ClientInstances[:-1]:
+        client.ConnectToServer(HOST, PORT)
+    SERVER.StartGame()
+    assert ClientInstances[-1].ConnectToServer(HOST, PORT) == -1
+    for client in ClientInstances[:-1]:
+        client.Disconnect()

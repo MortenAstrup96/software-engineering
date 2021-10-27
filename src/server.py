@@ -66,7 +66,7 @@ class CommunicationServer():  # External
             'difficulty': t_game.PlayerA.difficulty
           }, to=t_game.PlayerB.get_id()) # vice-versa
 
-    for game in self.ActiveGames: #Remove all active games from TrounamentGames
+    for game in self.ActiveGames: #Remove all active games from TournamentGames
       if game.PlayerA.isAI and game.PlayerB.isAI:
         self._concludeAIGame(game)
         self.ConcludedGames.append(game)
@@ -242,7 +242,9 @@ class CommunicationServer():  # External
           ready_counter += 1
 
       
-      if ready_counter == self.MaxConcurrentClients: # everyone is ready
+      if ready_counter == self.MaxConcurrentClients:# everyone is ready
+        self.ActiveGames = []
+        logger.debug(f"{len(self.ActiveGames)}, {self.TournamentGames}, {self.TournamentMode}")
         if len(self.ActiveGames) == 0 and len(self.TournamentGames) == 0 and self.TournamentMode: # all games for the tournament are complete!
           logger.debug('The tournament is over.')
 

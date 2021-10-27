@@ -407,9 +407,10 @@ class Game_Platform(object):
                 sys.exit(0)
       
             opponent = None
+            counter = 0
             while not opponent:
                 os.system('clear')
-                print("Waiting for opponent")
+                print("Waiting for opponent", counter)
                 opponent = player.CurrentOpponent
                 time.sleep(1)
             while opponent['id'] == 'none':
