@@ -47,3 +47,6 @@ To run the tests use the command:
 `python3 -m unittest` in the root folder. (Not in the folder src or test)
 
 When creating new test files please use the naming format: test_*.py where * is the thing you're testing.
+### Known bugs
+* Since the communication platform we integrated does not support draws there is no draws implemented in online matches. Playing over 200 turns forces a draw and the program might crash or hang.  
+* Sometimes the program hangs when a tournament with AI players is over. For some reason the server tries to start a new game instead of ending the tournament.
