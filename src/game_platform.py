@@ -482,7 +482,7 @@ class Game_Platform(object):
                                 data["white_pieces_in_hand"], data["black_pieces_in_hand"], 
                                 data["white_pieces_left"], data["black_pieces_left"],
                                 data["board_size"], data["lines"])
-                    self.print_board(board,player)
+                    self.print_board(board)
 
             if data == 'white' or data == 'black':
                 print(data.capitalize(), "surrendered,",player_c,"wins!")
