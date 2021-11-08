@@ -14,6 +14,10 @@ The engine uses a minimax algorithm with alpha-beta pruning to find good moves. 
 ### Requirements
 This program requires python 3.9 to work properly.  
 Other requirements can be installed with `python3 -m pip -r requirements.txt`  
+
+### How to run
+The game can be run with the command `python3 game_platform.py` in the src directory.  
+
 ### How-to-use: Engine
 The engine can be run from the terminal by standing in the src directory and running the command `python3 game_engine.py`.
 This will result in the engine reading the current state of the game in the file called board.json and writing the new game state to the file result.json. 
